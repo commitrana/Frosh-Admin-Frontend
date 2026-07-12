@@ -43,7 +43,7 @@ const FacultyList = () => {
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [scheduleMsg, setScheduleMsg] = useState('');
 
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = 'http://https://frosh-app-backend.onrender.com/api';
 
   const fetchFaculty = async () => {
     try {

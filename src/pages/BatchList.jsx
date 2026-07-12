@@ -26,7 +26,7 @@ const BatchList = () => {
   const navigate = useNavigate();
 
   
-  const API_URL = 'http://localhost:5000/api/faculty-timetable';
+  const API_URL = 'http://https://frosh-app-backend.onrender.com/api/faculty-timetable';
 
   // ✅ Upload to Cloudinary
   const uploadToCloudinary = async (file) => {
