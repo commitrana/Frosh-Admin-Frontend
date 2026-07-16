@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://https://frosh-app-backend.onrender.com/api';
+const API_URL = 'https://frosh-app-backend.onrender.com/api';
+export const SERVER_URL = API_URL.replace('/api', '');
 
 // Create axios instance
 const api = axios.create({
@@ -23,10 +24,11 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
 // Verify a member (admin)
 export const verifyMember = async (memberId, verifiedBy = 'Admin') => {
   const token = localStorage.getItem('adminToken');
-  const response = await axios.post(`${API_URL}/admin/verify-member/${memberId}`, 
+  const response = await axios.post(`${API_URL}/admin/verify-member/${memberId}`,
     { verifiedBy },
     {
       headers: {
@@ -53,7 +55,6 @@ export const declineMember = async (memberId) => {
 
 // ============ ADMIN AUTH ============
 
-// Admin Login
 export const adminLogin = async (username, password) => {
   const response = await api.post('/admin/login', { username, password });
   if (response.data.token) {
@@ -63,18 +64,15 @@ export const adminLogin = async (username, password) => {
   return response.data;
 };
 
-// Check if admin is logged in
 export const isAdminLoggedIn = () => {
   return !!localStorage.getItem('adminToken');
 };
 
-// Logout
 export const adminLogout = () => {
   localStorage.removeItem('adminToken');
   localStorage.removeItem('adminData');
 };
 
-// Get admin data
 export const getAdminData = () => {
   const data = localStorage.getItem('adminData');
   return data ? JSON.parse(data) : null;
@@ -82,31 +80,26 @@ export const getAdminData = () => {
 
 // ============ SOCIETY MANAGEMENT ============
 
-// Get all societies
 export const getSocieties = async () => {
   const response = await api.get('/admin/societies');
   return response.data;
 };
 
-// Create society
 export const createSociety = async (societyData) => {
   const response = await api.post('/admin/create-society', societyData);
   return response.data;
 };
 
-// Delete society
 export const deleteSociety = async (id) => {
   const response = await api.delete(`/admin/delete-society/${id}`);
   return response.data;
 };
 
-// Update society password
 export const updateSocietyPassword = async (id, password) => {
   const response = await api.put(`/admin/update-password/${id}`, { password });
   return response.data;
 };
 
-// Get members of a specific society (for admin)
 export const getSocietyMembers = async (societyId) => {
   try {
     const response = await api.get(`/admin/society-members/${societyId}`);
@@ -117,7 +110,6 @@ export const getSocietyMembers = async (societyId) => {
   }
 };
 
-// Get member by ID (for QR scanning)
 export const getMemberById = async (memberId) => {
   try {
     const response = await api.get(`/admin/member/${memberId}`);
@@ -130,7 +122,6 @@ export const getMemberById = async (memberId) => {
 
 // ============ STUDENT MANAGEMENT ============
 
-// Get all students with pagination and filtering
 export const getStudents = async (page = 1, limit = 10, search = '', sortBy = 'name', sortOrder = 'asc') => {
   try {
     const response = await api.get('/admin/students', {
@@ -142,7 +133,7 @@ export const getStudents = async (page = 1, limit = 10, search = '', sortBy = 'n
     throw error;
   }
 };
-// Generate passwords for all students
+
 export const generateAllPasswords = async () => {
   try {
     const response = await api.post('/admin/students/generate-all-passwords');
@@ -152,7 +143,7 @@ export const generateAllPasswords = async () => {
     throw error;
   }
 };
-// Create a single student
+
 export const createStudent = async (studentData) => {
   try {
     const response = await api.post('/admin/students/create', studentData);
@@ -162,8 +153,6 @@ export const createStudent = async (studentData) => {
     throw error;
   }
 };
-
-// Get all students (no pagination - for export)
 
 export const getAllStudents = async () => {
   try {
@@ -175,7 +164,6 @@ export const getAllStudents = async () => {
   }
 };
 
-// Update a student
 export const updateStudent = async (studentId, data) => {
   try {
     const response = await api.put(`/admin/students/${studentId}`, data);
@@ -186,7 +174,6 @@ export const updateStudent = async (studentId, data) => {
   }
 };
 
-// Bulk update students
 export const bulkUpdateStudents = async (studentIds, data) => {
   try {
     const response = await api.put('/admin/students/bulk', { studentIds, ...data });
@@ -197,7 +184,6 @@ export const bulkUpdateStudents = async (studentIds, data) => {
   }
 };
 
-// Delete a student
 export const deleteStudent = async (studentId) => {
   try {
     const response = await api.delete(`/admin/students/${studentId}`);
@@ -208,7 +194,6 @@ export const deleteStudent = async (studentId) => {
   }
 };
 
-// Bulk delete students
 export const bulkDeleteStudents = async (studentIds) => {
   try {
     const response = await api.delete('/admin/students/bulk', {
@@ -221,7 +206,6 @@ export const bulkDeleteStudents = async (studentIds) => {
   }
 };
 
-// Export students as CSV
 export const exportStudents = async () => {
   try {
     const response = await api.get('/admin/students/export', {
@@ -234,7 +218,6 @@ export const exportStudents = async () => {
   }
 };
 
-// Import students from CSV
 export const importStudents = async (students) => {
   try {
     const response = await api.post('/admin/students/import', { students });
@@ -244,6 +227,7 @@ export const importStudents = async (students) => {
     throw error;
   }
 };
+
 export const generateStudentPassword = async (studentId) => {
   try {
     const response = await api.post(`/admin/students/generate-password/${studentId}`);
@@ -253,9 +237,9 @@ export const generateStudentPassword = async (studentId) => {
     throw error;
   }
 };
+
 // ============ EVENT MANAGEMENT ============
 
-// Get all events (admin table view)
 export const getEvents = async () => {
   try {
     const response = await api.get('/events/admin/all');
@@ -266,7 +250,6 @@ export const getEvents = async () => {
   }
 };
 
-// Create a new event
 export const createEvent = async (eventData) => {
   try {
     const response = await api.post('/events/admin/create', eventData);
@@ -277,7 +260,6 @@ export const createEvent = async (eventData) => {
   }
 };
 
-// Update event details (name, date, time, venue, club, status)
 export const updateEvent = async (eventId, eventData) => {
   try {
     const response = await api.put(`/events/admin/${eventId}`, eventData);
@@ -288,7 +270,6 @@ export const updateEvent = async (eventId, eventData) => {
   }
 };
 
-// Update ONLY the event status (the live/upcoming/past toggle)
 export const updateEventStatus = async (eventId, status) => {
   try {
     const response = await api.put(`/events/admin/${eventId}/status`, { status });
@@ -299,7 +280,6 @@ export const updateEventStatus = async (eventId, status) => {
   }
 };
 
-// Delete an event
 export const deleteEvent = async (eventId) => {
   try {
     const response = await api.delete(`/events/admin/${eventId}`);
@@ -310,9 +290,30 @@ export const deleteEvent = async (eventId) => {
   }
 };
 
+export const uploadEventImage = async (eventId, file) => {
+  const token = localStorage.getItem('adminToken');
+  const formData = new FormData();
+  formData.append('image', file);
+
+  const response = await axios.post(
+    `${API_URL}/events/admin/${eventId}/upload-image`,
+    formData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Do NOT set 'Content-Type': 'multipart/form-data' manually here —
+        // that string is missing the required boundary parameter, which
+        // silently breaks multer's parsing on the backend (req.file ends
+        // up undefined). Leaving Content-Type unset lets the browser add
+        // the header itself, WITH the correct boundary, automatically.
+      },
+    }
+  );
+  return response.data;
+};
+
 // ============ TICKETING (ADMIN) ============
 
-// Scan a student's ticket QR code (marks it as used, once only)
 export const scanTicket = async (qrToken) => {
   try {
     const response = await api.post('/tickets/scan', { qrToken });
@@ -323,7 +324,6 @@ export const scanTicket = async (qrToken) => {
   }
 };
 
-// Get ticket stats for an event: { totalTickets, issued, scanned }
 export const getTicketStats = async (eventId) => {
   try {
     const response = await api.get(`/tickets/stats/${eventId}`);
@@ -334,7 +334,6 @@ export const getTicketStats = async (eventId) => {
   }
 };
 
-// Get the full registration (ticket) list for an event
 export const getEventRegistrations = async (eventId) => {
   try {
     const response = await api.get(`/tickets/event/${eventId}`);
@@ -347,8 +346,6 @@ export const getEventRegistrations = async (eventId) => {
 
 // ============ BOOTCAMP ============
 
-// Get the full bootcamp roster (each row includes a "verified" flag —
-// whether that email also exists in the main Student list)
 export const getBootcampList = async () => {
   try {
     const response = await api.get('/bootcamp/admin/list');
@@ -359,7 +356,6 @@ export const getBootcampList = async () => {
   }
 };
 
-// Bulk import the bootcamp roster from a parsed CSV: [{ name, email, phoneNo, batch }]
 export const importBootcampCSV = async (students) => {
   try {
     const response = await api.post('/bootcamp/admin/import', { students });
@@ -370,7 +366,6 @@ export const importBootcampCSV = async (students) => {
   }
 };
 
-// Randomly redistribute everyone currently in the roster across the 20 batches
 export const shuffleBootcampBatches = async () => {
   try {
     const response = await api.post('/bootcamp/admin/shuffle');
@@ -381,7 +376,6 @@ export const shuffleBootcampBatches = async () => {
   }
 };
 
-// Edit a single bootcamp student's batch assignment
 export const updateStudentBatch = async (id, batch) => {
   try {
     const response = await api.put(`/bootcamp/admin/${id}`, { batch });

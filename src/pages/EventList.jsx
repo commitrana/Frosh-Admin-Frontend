@@ -2,16 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Html5Qrcode } from 'html5-qrcode';
-import {
-  getEvents,
-  createEvent,
-  updateEvent,
-  updateEventStatus,
-  deleteEvent,
-  scanTicket,
-  getTicketStats,
-  getEventRegistrations
-} from '../services/api';
+
+import { getEvents, createEvent, updateEvent, updateEventStatus, deleteEvent, scanTicket, getTicketStats, getEventRegistrations, uploadEventImage, SERVER_URL } from '../services/api';
 
 const STATUS_OPTIONS = ['live', 'upcoming', 'past'];
 
@@ -21,7 +13,7 @@ const STATUS_STYLES = {
   past: { bg: '#f5f5f5', color: '#616161', label: '✅ Past' },
 };
 
-const EMPTY_FORM = { name: '', club: '', date: '', time: '', venue: '', status: 'upcoming', totalTickets: '' };
+const EMPTY_FORM = { name: '', date: '', time: '', venue: '', status: 'upcoming', totalTickets: '' };
 
 const EventList = () => {
   const [events, setEvents] = useState([]);
@@ -47,6 +39,11 @@ const EventList = () => {
   const [registrations, setRegistrations] = useState([]);
   const [registrationsLoading, setRegistrationsLoading] = useState(false);
   const [registrationFilter, setRegistrationFilter] = useState('pending'); // 'pending' | 'checkedIn'
+
+  // ---- Event photo upload state ----
+  const photoInputRef = useRef(null);
+  const [photoTargetEvent, setPhotoTargetEvent] = useState(null);
+  const [uploadingEventId, setUploadingEventId] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -102,7 +99,6 @@ const EventList = () => {
     setEditingEvent(event);
     setFormData({
       name: event.name,
-      club: event.club || '',
       date: event.date,
       time: event.time,
       venue: event.venue,
@@ -162,6 +158,47 @@ const EventList = () => {
     } catch (err) {
       setMessage('❌ Failed to delete event');
       setMessageType('error');
+    }
+  };
+
+  // ---- Event photo upload ----
+
+  const handlePhotoButtonClick = (event) => {
+    setPhotoTargetEvent(event);
+    // Reset the input value first so selecting the same file twice in a
+    // row still fires onChange (browsers otherwise skip a repeat change).
+    if (photoInputRef.current) photoInputRef.current.value = '';
+    photoInputRef.current?.click();
+  };
+
+  const handlePhotoFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !photoTargetEvent) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setMessage('❌ Only JPG, PNG, or WEBP images are allowed');
+      setMessageType('error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage('❌ Image must be under 5MB');
+      setMessageType('error');
+      return;
+    }
+
+    setUploadingEventId(photoTargetEvent._id);
+    try {
+      await uploadEventImage(photoTargetEvent._id, file);
+      setMessage(`✅ Photo uploaded for "${photoTargetEvent.name}"`);
+      setMessageType('success');
+      await fetchEvents();
+    } catch (err) {
+      setMessage('❌ ' + (err.response?.data?.error || 'Failed to upload photo'));
+      setMessageType('error');
+    } finally {
+      setUploadingEventId(null);
+      setPhotoTargetEvent(null);
     }
   };
 
@@ -367,14 +404,8 @@ const EventList = () => {
                 />
               </div>
               <div style={styles.formGroup}>
-                <label>Club / Organizer</label>
-                <input
-                  type="text"
-                  placeholder="e.g. MUDRA"
-                  value={formData.club}
-                  onChange={(e) => setFormData({ ...formData, club: e.target.value })}
-                  style={styles.formInput}
-                />
+                
+                
               </div>
             </div>
             <div style={styles.formRow}>
@@ -456,13 +487,7 @@ const EventList = () => {
                 style={styles.formInput}
                 required
               />
-              <input
-                type="text"
-                placeholder="Club / Organizer"
-                value={formData.club}
-                onChange={(e) => setFormData({ ...formData, club: e.target.value })}
-                style={styles.formInput}
-              />
+              
               <input
                 type="date"
                 value={formData.date}
@@ -533,11 +558,12 @@ const EventList = () => {
             <tr>
               <th>#</th>
               <th>Event Name</th>
-              <th>Club</th>
+              
               <th>Date</th>
               <th>Time</th>
               <th>Venue</th>
               <th>Status</th>
+              <th>Image</th>
               <th>Tickets</th>
               <th>Actions</th>
             </tr>
@@ -545,18 +571,41 @@ const EventList = () => {
           <tbody>
             {events.length === 0 ? (
               <tr>
-                <td colSpan="9" style={styles.emptyState}>No events added yet.</td>
+                <td colSpan="10" style={styles.emptyState}>No events added yet.</td>
               </tr>
             ) : (
               events.map((event, index) => (
                 <tr key={event._id}>
                   <td>{index + 1}</td>
                   <td><strong>{event.name}</strong></td>
-                  <td>{event.club || '-'}</td>
                   <td>{event.date}</td>
                   <td>{event.time}</td>
                   <td>{event.venue}</td>
                   <td>{renderStatusToggle(event)}</td>
+                  <td>
+                    <div style={styles.photoCell}>
+                      {event.imageUrl ? (
+                        <img
+                          src={`${SERVER_URL}${event.imageUrl}`}
+                          alt={event.name}
+                          style={styles.thumbnail}
+                        />
+                      ) : (
+                        <span style={styles.noImageText}>No image</span>
+                      )}
+                      <button
+                        onClick={() => handlePhotoButtonClick(event)}
+                        style={styles.uploadPhotoBtn}
+                        disabled={uploadingEventId === event._id}
+                      >
+                        {uploadingEventId === event._id
+                          ? 'Uploading...'
+                          : event.imageUrl
+                          ? '🖼️ Replace Photo'
+                          : '📷 Upload Photo'}
+                      </button>
+                    </div>
+                  </td>
                   <td>
                     <span style={styles.ticketPill}>
                       {event.ticketsIssued || 0} / {event.totalTickets ?? '∞'}
@@ -587,6 +636,15 @@ const EventList = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Hidden file input shared by every row's Upload/Replace Photo button */}
+      <input
+        type="file"
+        ref={photoInputRef}
+        onChange={handlePhotoFileChange}
+        accept="image/jpeg,image/png,image/webp"
+        style={{ display: 'none' }}
+      />
 
       {/* Ticket Scanner Modal */}
       {scanningEvent && (
@@ -1050,6 +1108,34 @@ const styles = {
     borderRadius: '3px',
     cursor: 'pointer',
     fontSize: '12px',
+  },
+  photoCell: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '6px',
+    minWidth: '90px',
+  },
+  thumbnail: {
+    width: '64px',
+    height: '64px',
+    objectFit: 'cover',
+    borderRadius: '6px',
+    border: '1px solid #ddd',
+  },
+  noImageText: {
+    fontSize: '11px',
+    color: '#999',
+  },
+  uploadPhotoBtn: {
+    padding: '4px 8px',
+    backgroundColor: '#607D8B',
+    color: 'white',
+    border: 'none',
+    borderRadius: '3px',
+    cursor: 'pointer',
+    fontSize: '11px',
+    whiteSpace: 'nowrap',
   },
   emptyState: {
     textAlign: 'center',

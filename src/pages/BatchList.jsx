@@ -17,6 +17,10 @@ const BatchList = () => {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleData, setScheduleData] = useState(null);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState('');
   const [editData, setEditData] = useState({ imageUrl: '', thumbnailUrl: '' });
   const [formLoading, setFormLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -26,7 +30,8 @@ const BatchList = () => {
   const navigate = useNavigate();
 
   
-  const API_URL = 'http://https://frosh-app-backend.onrender.com/api/faculty-timetable';
+  const API_URL = 'https://frosh-app-backend.onrender.com/api/faculty-timetable';
+  const BOOTCAMP_API_URL = 'https://frosh-app-backend.onrender.com/api/bootcamp';
 
   // ✅ Upload to Cloudinary
   const uploadToCloudinary = async (file) => {
@@ -227,6 +232,28 @@ const BatchList = () => {
     }
   };
 
+  const handleViewSchedule = async (batch) => {
+    setSelectedBatch(batch);
+    setShowScheduleModal(true);
+    setScheduleLoading(true);
+    setScheduleError('');
+    setScheduleData(null);
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(
+        `${BOOTCAMP_API_URL}/admin/batch-schedule/${batch.batchCode}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setScheduleData(response.data);
+    } catch (err) {
+      console.error('❌ Fetch schedule error:', err);
+      setScheduleError('Failed to load schedule for this batch');
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -297,6 +324,12 @@ const BatchList = () => {
                         style={styles.editBtn}
                       >
                         ✏️ Change Image
+                      </button>
+                      <button
+                        onClick={() => handleViewSchedule(batch)}
+                        style={styles.scheduleBtn}
+                      >
+                        📅 View Schedule
                       </button>
                     </td>
                   </tr>
@@ -431,6 +464,59 @@ const BatchList = () => {
             </div>
           </div>
         )}
+
+        {/* Schedule View Modal - Shows this batch's actual class schedule,
+            derived live from every faculty's timetable (same source the
+            student app's "Class Schedule" section reads from) */}
+        {showScheduleModal && selectedBatch && (
+          <div style={styles.modalOverlay} onClick={() => setShowScheduleModal(false)}>
+            <div style={styles.scheduleModal} onClick={(e) => e.stopPropagation()}>
+              <div style={styles.modalHeader}>
+                <h3>📅 Class Schedule — {selectedBatch.batchCode}</h3>
+                <button onClick={() => setShowScheduleModal(false)} style={styles.closeBtn}>✕</button>
+              </div>
+
+              {scheduleLoading ? (
+                <div style={styles.loading}>Loading schedule...</div>
+              ) : scheduleError ? (
+                <div style={styles.error}>{scheduleError}</div>
+              ) : !scheduleData || scheduleData.classes.length === 0 ? (
+                <div style={styles.emptyState}>No classes assigned to this batch yet.</div>
+              ) : (
+                <div style={styles.scheduleList}>
+                  {scheduleData.days.map((day) => {
+                    const dayClasses = scheduleData.timeSlots
+                      .map((slot) => scheduleData.classes.find((c) => c.day === day && c.slot === slot))
+                      .filter(Boolean);
+
+                    if (dayClasses.length === 0) return null;
+
+                    return (
+                      <div key={day} style={styles.scheduleDayBlock}>
+                        <div style={styles.scheduleDayLabel}>{day}</div>
+                        {dayClasses.map((cls) => (
+                          <div key={`${cls.day}-${cls.slot}`} style={styles.scheduleRow}>
+                            <div style={styles.scheduleTimeCol}>{cls.slot}</div>
+                            <div style={styles.scheduleDetailsCol}>
+                              <div style={styles.scheduleSubject}>{cls.subject}</div>
+                              <div style={styles.scheduleMeta}>
+                                {cls.faculty}{cls.venue ? ` · 📍 ${cls.venue}` : ''}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <button onClick={() => setShowScheduleModal(false)} style={styles.closeModalBtn}>
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
@@ -488,6 +574,67 @@ const styles = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  scheduleBtn: {
+    padding: '6px 14px',
+    backgroundColor: '#2196F3',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    marginLeft: '8px',
+  },
+  scheduleModal: {
+    backgroundColor: 'white',
+    padding: '25px',
+    borderRadius: '10px',
+    maxWidth: '600px',
+    width: '90%',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+  },
+  scheduleList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '18px',
+  },
+  scheduleDayBlock: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  scheduleDayLabel: {
+    fontWeight: '700',
+    fontSize: '13px',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    color: '#2196F3',
+    borderBottom: '1px solid #eee',
+    paddingBottom: '6px',
+  },
+  scheduleRow: {
+    display: 'flex',
+    gap: '14px',
+  },
+  scheduleTimeCol: {
+    width: '110px',
+    flexShrink: 0,
+    fontSize: '13px',
+    color: '#666',
+    fontWeight: '600',
+  },
+  scheduleDetailsCol: {
+    flex: 1,
+  },
+  scheduleSubject: {
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#2c3e50',
+  },
+  scheduleMeta: {
+    fontSize: '13px',
+    color: '#777',
+    marginTop: '2px',
   },
   modalOverlay: {
     position: 'fixed',

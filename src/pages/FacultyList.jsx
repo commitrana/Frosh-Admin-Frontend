@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import FeedbackSection from '../components/FeedbackSection';
 import axios from 'axios';
 
 const FacultyList = () => {
@@ -43,7 +44,7 @@ const FacultyList = () => {
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [scheduleMsg, setScheduleMsg] = useState('');
 
-  const API_URL = 'http://https://frosh-app-backend.onrender.com/api';
+  const API_URL = 'https://frosh-app-backend.onrender.com/api';
 
   const fetchFaculty = async () => {
     try {
@@ -378,6 +379,8 @@ const FacultyList = () => {
 
         {error && <div style={styles.error}>{error}</div>}
         {success && <div style={styles.success}>{success}</div>}
+
+        <FeedbackSection />
 
         <div style={styles.actions}>
           <button onClick={() => setShowAddModal(true)} style={styles.createBtn}>

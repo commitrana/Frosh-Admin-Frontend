@@ -31,7 +31,6 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchSocieties();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchSocieties = async () => {
@@ -68,7 +67,7 @@ const AdminDashboard = () => {
     await fetchSocietyMembers(society._id);
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteSociety = async (id) => {
     if (!window.confirm('Are you sure you want to delete this society?')) return;
     try {
       await deleteSociety(id);
@@ -87,10 +86,8 @@ const AdminDashboard = () => {
 
     try {
       await createSociety(formData);
-      
       setFormSuccess('✅ Society created successfully!');
       setFormData({ societyName: '', email: '', password: '' });
-      
       setTimeout(() => {
         setShowCreateForm(false);
         fetchSocieties();
@@ -120,9 +117,7 @@ const AdminDashboard = () => {
 
     try {
       await updateSocietyPassword(editingSociety._id, formData.password);
-      
       setFormSuccess('✅ Password updated successfully!');
-      
       setTimeout(() => {
         setShowEditForm(false);
         setEditingSociety(null);
@@ -262,102 +257,94 @@ const AdminDashboard = () => {
       )}
 
       {/* View Members Modal */}
-      {/* View Members Modal */}
-{/* View Members Modal */}
-{showMembersModal && selectedSociety && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modalLarge}>
-      <div style={styles.modalHeader}>
-        <h2>👥 Members of {selectedSociety.societyName}</h2>
-        <button 
-          onClick={() => {
-            setShowMembersModal(false);
-            setSelectedSociety(null);
-            setSocietyMembers([]);
-          }} 
-          style={styles.closeBtn}
-        >
-          ✕
-        </button>
-      </div>
-      
-      {membersLoading ? (
-        <div style={styles.loadingSmall}>Loading members...</div>
-      ) : societyMembers.length === 0 ? (
-        <div style={styles.emptyState}>No members added yet for this society.</div>
-      ) : (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Branch</th>
-                <th>Roll No</th>
-                <th>Email</th>
-                <th>Slot</th>
-                <th>Status</th>
-                <th>Created At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {societyMembers.map((member, index) => (
-                <tr key={member._id || index}>
-                  <td>{index + 1}</td>
-                  <td><strong>{member.name}</strong></td>
-                  <td>{member.branch}</td>
-                  <td>{member.rollNo}</td>
-                  <td>{member.email}</td>
-                  <td>
-                    <span style={{
-                      ...styles.slotBadge,
-                      backgroundColor: member.slotNumber === 1 ? '#4CAF50' : '#2196F3'
-                    }}>
-                      Slot {member.slotNumber}
-                    </span>
-                  </td>
-                  <td>
-  <span style={{
-    ...styles.statusBadge,
-    backgroundColor: 
-      member.status === 'verified' ? '#4CAF50' :
-      member.status === 'rejected' ? '#f44336' :
-      '#FF9800',
-    color: 'white',
-    padding: '4px 10px',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    display: 'inline-block'
-  }}>
-    {member.status === 'verified' ? '✅ Verified' :
-     member.status === 'rejected' ? '❌ Rejected' :
-     '⏳ Pending'}
-  </span>
-</td>
-                  <td>{new Date(member.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {showMembersModal && selectedSociety && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalLarge}>
+            <div style={styles.modalHeader}>
+              <h2>👥 Members of {selectedSociety.societyName}</h2>
+              <button 
+                onClick={() => {
+                  setShowMembersModal(false);
+                  setSelectedSociety(null);
+                  setSocietyMembers([]);
+                }} 
+                style={styles.closeBtn}
+              >
+                ✕
+              </button>
+            </div>
+            
+            {membersLoading ? (
+              <div style={styles.loadingSmall}>Loading members...</div>
+            ) : societyMembers.length === 0 ? (
+              <div style={styles.emptyState}>No members added yet for this society.</div>
+            ) : (
+              <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Branch</th>
+                      <th>Roll No</th>
+                      <th>Email</th>
+                      <th>Slot</th>
+                      <th>Status</th>
+                      <th>Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {societyMembers.map((member, index) => (
+                      <tr key={member._id || index}>
+                        <td>{index + 1}</td>
+                        <td><strong>{member.name}</strong></td>
+                        <td>{member.branch}</td>
+                        <td>{member.rollNo}</td>
+                        <td>{member.email}</td>
+                        <td>
+                          <span style={{
+                            ...styles.slotBadge,
+                            backgroundColor: member.slotNumber === 1 ? '#4CAF50' : '#2196F3'
+                          }}>
+                            Slot {member.slotNumber}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{
+                            ...styles.statusBadge,
+                            backgroundColor: 
+                              member.status === 'verified' ? '#4CAF50' :
+                              member.status === 'rejected' ? '#f44336' :
+                              '#FF9800'
+                          }}>
+                            {member.status === 'verified' ? '✅ Verified' :
+                             member.status === 'rejected' ? '❌ Rejected' :
+                             '⏳ Pending'}
+                          </span>
+                        </td>
+                        <td>{new Date(member.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            
+            <div style={styles.modalFooter}>
+              <button 
+                onClick={() => {
+                  setShowMembersModal(false);
+                  setSelectedSociety(null);
+                  setSocietyMembers([]);
+                }} 
+                style={styles.closeModalBtn}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
-      
-      <div style={styles.modalFooter}>
-        <button 
-          onClick={() => {
-            setShowMembersModal(false);
-            setSelectedSociety(null);
-            setSocietyMembers([]);
-          }} 
-          style={styles.closeModalBtn}
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
 
       <div style={styles.tableContainer}>
         <table style={styles.table}>
@@ -407,7 +394,7 @@ const AdminDashboard = () => {
                   <td>
                     <div style={styles.actionsCell}>
                       <button 
-                        onClick={() => handleDelete(society._id)} 
+                        onClick={() => handleDeleteSociety(society._id)} 
                         style={styles.deleteBtn}
                       >
                         Delete
@@ -482,13 +469,6 @@ const styles = {
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
     marginBottom: '20px',
   },
-  statusBadge: {
-  padding: '4px 10px',
-  borderRadius: '12px',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  display: 'inline-block',
-},
   formSubtitle: {
     color: '#666',
     fontSize: '14px',
@@ -560,13 +540,6 @@ const styles = {
     overflow: 'auto',
     boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
   },
-  statusBadge: {
-  padding: '4px 10px',
-  borderRadius: '12px',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  display: 'inline-block',
-},
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -602,6 +575,7 @@ const styles = {
     borderRadius: '10px',
     overflow: 'auto',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    marginBottom: '20px',
   },
   table: {
     width: '100%',
@@ -647,6 +621,14 @@ const styles = {
     color: 'white',
     fontSize: '11px',
     fontWeight: 'bold',
+  },
+  statusBadge: {
+    padding: '4px 10px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    display: 'inline-block',
+    color: 'white',
   },
   actionsCell: {
     display: 'flex',

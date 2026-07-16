@@ -8,7 +8,7 @@ const Home = () => {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/test');
+        const response = await axios.get('https://frosh-app-backend.onrender.com/api/test');
         setStatus(`✅ Backend is running: ${response.data.message}`);
       } catch (error) {
         setStatus('❌ Backend not running. Start the server with "npm run dev" in backend folder');

@@ -15,7 +15,7 @@ const StudentLogin = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/student-login', {
+      const response = await axios.post('https://frosh-app-backend.onrender.com/api/admin/student-login', {
         email,
         password
       });
