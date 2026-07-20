@@ -336,7 +336,7 @@ const EventList = () => {
             key={status}
             onClick={() => handleStatusChange(event._id, status)}
             style={{
-              ...styles.toggleBtn,
+              ...styles.toggleBtnSmall,
               backgroundColor: isActive ? cfg.color : '#f0f0f0',
               color: isActive ? 'white' : '#666',
               fontWeight: isActive ? 'bold' : 'normal',
@@ -921,7 +921,7 @@ const styles = {
     gap: '4px',
     flexWrap: 'wrap',
   },
-  toggleBtn: {
+  toggleBtnSmall: {
     padding: '5px 10px',
     borderRadius: '14px',
     border: 'none',
