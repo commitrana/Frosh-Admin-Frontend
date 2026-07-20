@@ -8,9 +8,9 @@ import { getEvents, createEvent, updateEvent, updateEventStatus, deleteEvent, sc
 const STATUS_OPTIONS = ['live', 'upcoming', 'past'];
 
 const STATUS_STYLES = {
-  live: { bg: '#ffebee', color: '#c62828', label: '🔴 Live' },
-  upcoming: { bg: '#e3f2fd', color: '#1565c0', label: '🕐 Upcoming' },
-  past: { bg: '#f5f5f5', color: '#616161', label: '✅ Past' },
+  live: { bg: '#ffebee', color: '#c62828', label: ' Live' },
+  upcoming: { bg: '#e3f2fd', color: '#1565c0', label: ' Upcoming' },
+  past: { bg: '#f5f5f5', color: '#616161', label: 'Past' },
 };
 
 const EMPTY_FORM = { name: '', date: '', time: '', venue: '', status: 'upcoming', totalTickets: '' };
@@ -80,7 +80,7 @@ const EventList = () => {
       }
 
       await createEvent(formData);
-      setFormSuccess('✅ Event created successfully!');
+      setFormSuccess('Event created successfully!');
       setFormData(EMPTY_FORM);
 
       setTimeout(() => {
@@ -117,7 +117,7 @@ const EventList = () => {
 
     try {
       await updateEvent(editingEvent._id, formData);
-      setFormSuccess('✅ Event updated successfully!');
+      setFormSuccess('Event updated successfully!');
 
       setTimeout(() => {
         setEditingEvent(null);
@@ -136,14 +136,14 @@ const EventList = () => {
   const handleStatusChange = async (eventId, newStatus) => {
     try {
       await updateEventStatus(eventId, newStatus);
-      setMessage(`✅ Status updated to "${newStatus}"`);
+      setMessage(`Status updated to "${newStatus}"`);
       setMessageType('success');
       setEvents(prev =>
         prev.map(ev => (ev._id === eventId ? { ...ev, status: newStatus } : ev))
       );
       setTimeout(() => setMessage(''), 2000);
     } catch (err) {
-      setMessage('❌ Failed to update status: ' + (err.response?.data?.error || err.message));
+      setMessage('Failed to update status: ' + (err.response?.data?.error || err.message));
       setMessageType('error');
     }
   };
@@ -152,11 +152,11 @@ const EventList = () => {
     if (!window.confirm(`Delete event "${name}"? This cannot be undone.`)) return;
     try {
       await deleteEvent(id);
-      setMessage(`✅ Event "${name}" deleted`);
+      setMessage(`Event "${name}" deleted`);
       setMessageType('success');
       fetchEvents();
     } catch (err) {
-      setMessage('❌ Failed to delete event');
+      setMessage('Failed to delete event');
       setMessageType('error');
     }
   };
@@ -177,12 +177,12 @@ const EventList = () => {
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setMessage('❌ Only JPG, PNG, or WEBP images are allowed');
+      setMessage('Only JPG, PNG, or WEBP images are allowed');
       setMessageType('error');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setMessage('❌ Image must be under 5MB');
+      setMessage('Image must be under 5MB');
       setMessageType('error');
       return;
     }
@@ -190,7 +190,7 @@ const EventList = () => {
     setUploadingEventId(photoTargetEvent._id);
     try {
       await uploadEventImage(photoTargetEvent._id, file);
-      setMessage(`✅ Photo uploaded for "${photoTargetEvent.name}"`);
+      setMessage(`Photo uploaded for "${photoTargetEvent.name}"`);
       setMessageType('success');
       await fetchEvents();
     } catch (err) {
@@ -213,7 +213,7 @@ const EventList = () => {
       const data = await getEventRegistrations(event._id);
       setRegistrations(data.registrations || []);
     } catch (err) {
-      setMessage('❌ Failed to load registrations');
+      setMessage('Failed to load registrations');
       setMessageType('error');
     } finally {
       setRegistrationsLoading(false);
@@ -342,7 +342,7 @@ const EventList = () => {
               fontWeight: isActive ? 'bold' : 'normal',
             }}
           >
-            {status === 'live' ? '🔴' : status === 'upcoming' ? '🕐' : '✅'} {status.charAt(0).toUpperCase() + status.slice(1)}
+            {status === 'live' ? '' : status === 'upcoming' ? '' : ''} {status.charAt(0).toUpperCase() + status.slice(1)}
           </button>
         );
       })}
@@ -359,7 +359,7 @@ const EventList = () => {
 
       <div style={styles.headerRow}>
         <div>
-          <h1 style={styles.title}>🎉 Event List</h1>
+          <h1 style={styles.title}> Event List</h1>
           <p style={styles.subtitle}>Manage all Frosh events shown in the app</p>
         </div>
         <div style={styles.headerStats}>
@@ -449,8 +449,8 @@ const EventList = () => {
                 style={styles.formInput}
               >
                 <option value="upcoming">🕐 Upcoming</option>
-                <option value="live">🔴 Live</option>
-                <option value="past">✅ Past</option>
+                <option value="live">Live</option>
+                <option value="past">Past</option>
               </select>
             </div>
             <div style={styles.formGroup}>
@@ -475,7 +475,7 @@ const EventList = () => {
       {editingEvent && (
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
-            <h3>✏️ Edit Event</h3>
+            <h3>Edit Event</h3>
             {formError && <div style={styles.error}>{formError}</div>}
             {formSuccess && <div style={styles.success}>{formSuccess}</div>}
             <form onSubmit={handleUpdateEvent} style={styles.form}>
@@ -515,9 +515,9 @@ const EventList = () => {
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 style={styles.formInput}
               >
-                <option value="upcoming">🕐 Upcoming</option>
-                <option value="live">🔴 Live</option>
-                <option value="past">✅ Past</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="live">Live</option>
+                <option value="past">Past</option>
               </select>
               <input
                 type="number"
@@ -529,7 +529,7 @@ const EventList = () => {
               />
               {editingEvent && editingEvent.ticketsIssued > 0 && (
                 <p style={styles.helperText}>
-                  ℹ️ {editingEvent.ticketsIssued} ticket{editingEvent.ticketsIssued === 1 ? '' : 's'} already issued — total can't go below this.
+                  {editingEvent.ticketsIssued} ticket{editingEvent.ticketsIssued === 1 ? '' : 's'} already issued — total can't go below this.
                 </p>
               )}
               <div style={styles.formButtons}>
@@ -601,8 +601,8 @@ const EventList = () => {
                         {uploadingEventId === event._id
                           ? 'Uploading...'
                           : event.imageUrl
-                          ? '🖼️ Replace Photo'
-                          : '📷 Upload Photo'}
+                          ? 'Replace Photo'
+                          : 'Upload Photo'}
                       </button>
                     </div>
                   </td>
@@ -614,19 +614,19 @@ const EventList = () => {
                   <td>
                     <div style={styles.actionsCell}>
                       <button onClick={() => handleEditClick(event)} style={styles.editBtn}>
-                        ✏️ Edit
+                        Edit
                       </button>
                       <button onClick={() => openScanner(event)} style={styles.scanBtn}>
-                        📷 Scan Now
+                        Scan Now
                       </button>
                       <button onClick={() => openRegistrations(event)} style={styles.viewRegBtn}>
-                        📋 View Registrations
+                        View Registrations
                       </button>
                       <button
                         onClick={() => handleDelete(event._id, event.name)}
                         style={styles.deleteBtn}
                       >
-                        🗑️ Delete
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -658,10 +658,10 @@ const EventList = () => {
             {scanStats && (
               <div style={styles.scanStatsRow}>
                 <span style={styles.statPill}>
-                  ✅ Scanned: {scanStats.scanned}
+                  Scanned: {scanStats.scanned}
                 </span>
                 <span style={styles.statPill}>
-                  🎟️ Issued: {scanStats.issued} / {scanStats.totalTickets ?? '∞'}
+                  Issued: {scanStats.issued} / {scanStats.totalTickets ?? '∞'}
                 </span>
               </div>
             )}
@@ -710,7 +710,7 @@ const EventList = () => {
         <div style={styles.modalOverlay}>
           <div style={styles.regModal}>
             <div style={styles.scanHeader}>
-              <h3 style={{ margin: 0 }}>📋 Registrations — {viewingEvent.name}</h3>
+              <h3 style={{ margin: 0 }}>Registrations — {viewingEvent.name}</h3>
               <button onClick={closeRegistrations} style={styles.closeIconBtn}>✕</button>
             </div>
 
@@ -723,7 +723,7 @@ const EventList = () => {
                   ...(registrationFilter === 'pending' ? styles.toggleBtnActive : {}),
                 }}
               >
-                🕐 Pending ({registrations.filter((r) => r.status === 'valid').length})
+                Pending ({registrations.filter((r) => r.status === 'valid').length})
               </button>
               <button
                 onClick={() => setRegistrationFilter('checkedIn')}
@@ -732,7 +732,7 @@ const EventList = () => {
                   ...(registrationFilter === 'checkedIn' ? styles.toggleBtnActiveGreen : {}),
                 }}
               >
-                ✅ Checked In ({registrations.filter((r) => r.status === 'used').length})
+                Checked In ({registrations.filter((r) => r.status === 'used').length})
               </button>
             </div>
 
@@ -753,7 +753,7 @@ const EventList = () => {
                       <span
                         style={r.status === 'used' ? styles.badgeCheckedIn : styles.badgePending}
                       >
-                        {r.status === 'used' ? '✅ Checked In' : '🕐 Pending'}
+                        {r.status === 'used' ? 'Checked In' : '🕐 Pending'}
                       </span>
                     </div>
                   ))}

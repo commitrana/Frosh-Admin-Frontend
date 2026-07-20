@@ -386,6 +386,53 @@ export const updateStudentBatch = async (id, batch) => {
   }
 };
 
+// ============ TEAM PHOTOS (Images tab) ============
+
+// Add/upload a team member — expects a FormData with:
+// category, name, branch?/designation? (depending on category), image (file)
+export const uploadTeamMember = async (formData) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await axios.post(`${API_URL}/admin/team/upload`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // Same reasoning as uploadEventImage above — leave Content-Type unset
+      // so the browser sets it with the correct multipart boundary.
+    },
+  });
+  return response.data;
+};
+
+// Public — returns { faculty: [...], osc: [...], core: [...], mentor: [...] }
+export const getTeamMembers = async () => {
+  try {
+    const response = await api.get('/team');
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error fetching team members:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const updateTeamMember = async (id, data) => {
+  try {
+    const response = await api.put(`/admin/team/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error updating team member:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const deleteTeamMember = async (id) => {
+  try {
+    const response = await api.delete(`/admin/team/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error deleting team member:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 // ============ EXPORT DEFAULT ============
 
 export default api;
