@@ -38,12 +38,8 @@ const Home = () => {
             Admin Panel
           </button>
         </Link>
-        <button style={{ ...styles.btn, backgroundColor: '#4CAF50' }}>
-          Society Login
-        </button>
-        <button style={{ ...styles.btn, backgroundColor: '#2196F3' }}>
-          Society Register
-        </button>
+        
+        
       </div>
 
       <p style={styles.footer}>

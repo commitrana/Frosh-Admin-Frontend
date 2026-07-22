@@ -43,6 +43,17 @@ const FacultyList = () => {
   const [lectureForm, setLectureForm] = useState({ subject: '', venue: '', batches: [] });
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [scheduleMsg, setScheduleMsg] = useState('');
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+
+  // ===== Completed class history (admin-only) =====
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyFaculty, setHistoryFaculty] = useState([]);
+  const [selectedHistoryFaculty, setSelectedHistoryFaculty] = useState(null);
+  const [historySessions, setHistorySessions] = useState([]);
+  const [selectedHistorySession, setSelectedHistorySession] = useState(null);
+  const [historyRoster, setHistoryRoster] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
 
   const API_URL = 'https://frosh-app-backend.onrender.com/api';
 
@@ -208,23 +219,126 @@ const FacultyList = () => {
     }
   };
 
+  const openClassHistory = async () => {
+    setShowHistoryModal(true);
+    setSelectedHistoryFaculty(null);
+    setHistorySessions([]);
+    setSelectedHistorySession(null);
+    setHistoryRoster([]);
+    setHistoryError('');
+    setHistoryLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${API_URL}/attendance/admin/history/faculty`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setHistoryFaculty(response.data.faculty || []);
+    } catch (err) {
+      setHistoryError('Could not load class history.');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const selectHistoryFaculty = async (member) => {
+    setSelectedHistoryFaculty(member);
+    setHistorySessions([]);
+    setSelectedHistorySession(null);
+    setHistoryRoster([]);
+    setHistoryError('');
+    setHistoryLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${API_URL}/attendance/admin/history/faculty/${member._id}/sessions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setHistorySessions(response.data.sessions || []);
+    } catch (err) {
+      setHistoryError('Could not load this faculty member\'s completed classes.');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const selectHistorySession = async (session) => {
+    setSelectedHistorySession(session);
+    setHistoryRoster([]);
+    setHistoryError('');
+    setHistoryLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${API_URL}/attendance/admin/history/session/${session._id}/roster`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setHistoryRoster(response.data.students || []);
+    } catch (err) {
+      setHistoryError('Could not load this class roster.');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   // ===== Schedule (Timetable Grid) handlers =====
 
-  const handleScheduleClick = (f) => {
+  const handleScheduleClick = async (f) => {
+    // Open immediately with whatever we have, so the UI feels responsive —
+    // but treat it as provisional until the fresh fetch below lands.
     setScheduleFaculty(f);
-    const tt = f.timetable || {};
-    const slots = Array.isArray(tt.timeSlots) && tt.timeSlots.length
-      ? tt.timeSlots
-      : ['09:00 - 10:00', '10:00 - 11:00', '11:00 - 12:00'];
-    // Backend default is { schedule: [] } (array) — normalize to object map for the grid
-    const data = (tt.schedule && typeof tt.schedule === 'object' && !Array.isArray(tt.schedule))
-      ? tt.schedule
-      : {};
-    setTimeSlots(slots);
-    setScheduleData(data);
     setEditingCell(null);
     setScheduleMsg('');
     setShowScheduleModal(true);
+    setScheduleLoading(true);
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      // This is the actual fix: re-fetch from the server right now instead
+      // of reading `f.timetable`, which is only as fresh as whenever
+      // fetchFaculty() last happened to run. If another edit session (a
+      // second tab, or a background fetchFaculty() elsewhere in the app)
+      // saved a newer schedule in between, `f` here would be stale and we'd
+      // silently build the editor from outdated data — then overwrite the
+      // newer save when "Save Schedule" is clicked.
+      const response = await axios.get(`${API_URL}/faculty/admin/list`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const freshList = (response.data && response.data.faculty) || [];
+      const fresh = freshList.find((x) => x._id === f._id) || f;
+
+      // Sync the list-level state too, so any other view of this faculty
+      // member (e.g. reopening Edit) also sees the latest data.
+      setFaculty(freshList);
+      setScheduleFaculty(fresh);
+
+      const tt = fresh.timetable || {};
+      const slots = Array.isArray(tt.timeSlots) && tt.timeSlots.length
+        ? tt.timeSlots
+        : ['09:00 - 10:00', '10:00 - 11:00', '11:00 - 12:00'];
+      // Backend default is { schedule: [] } (array) — normalize to object map for the grid
+      const data = (tt.schedule && typeof tt.schedule === 'object' && !Array.isArray(tt.schedule))
+        ? tt.schedule
+        : {};
+      setTimeSlots(slots);
+      setScheduleData(data);
+    } catch (err) {
+      console.error('❌ Failed to fetch fresh schedule:', err);
+      setScheduleMsg('⚠️ Could not confirm latest schedule from server — showing last known data. Double-check before saving.');
+      // Fall back to what we were passed so the modal isn't empty, but the
+      // warning above stays up so the admin knows this may not be current.
+      const tt = f.timetable || {};
+      const slots = Array.isArray(tt.timeSlots) && tt.timeSlots.length
+        ? tt.timeSlots
+        : ['09:00 - 10:00', '10:00 - 11:00', '11:00 - 12:00'];
+      const data = (tt.schedule && typeof tt.schedule === 'object' && !Array.isArray(tt.schedule))
+        ? tt.schedule
+        : {};
+      setTimeSlots(slots);
+      setScheduleData(data);
+    } finally {
+      setScheduleLoading(false);
+    }
   };
 
   const handleAddTimeSlot = () => {
@@ -386,6 +500,9 @@ const FacultyList = () => {
           <button onClick={() => setShowAddModal(true)} style={styles.createBtn}>
             ➕ Add Faculty
           </button>
+          <button onClick={openClassHistory} style={styles.historyBtn}>
+            Class History
+          </button>
           <button onClick={fetchFaculty} style={styles.refreshBtn}>
             🔄 Refresh
           </button>
@@ -459,6 +576,69 @@ const FacultyList = () => {
             </tbody>
           </table>
         </div>
+
+        {showHistoryModal && (
+          <div style={styles.modalOverlay} onClick={() => setShowHistoryModal(false)}>
+            <div style={styles.scheduleModal} onClick={(e) => e.stopPropagation()}>
+              <div style={styles.modalHeader}>
+                <h3>Class History</h3>
+                <button onClick={() => setShowHistoryModal(false)} style={styles.closeBtn}>×</button>
+              </div>
+              {historyError && <div style={styles.error}>{historyError}</div>}
+              {historyLoading && <div style={styles.emptyGridMsg}>Loading...</div>}
+
+              {!historyLoading && !selectedHistoryFaculty && (
+                <div style={styles.historyList}>
+                  {historyFaculty.map((member) => (
+                    <button key={member._id} style={styles.historyItem} onClick={() => selectHistoryFaculty(member)}>
+                      <strong>{member.name}</strong>
+                      <span>{member.department || 'Faculty'} · {member.completedClasses} completed class{member.completedClasses === 1 ? '' : 'es'}</span>
+                    </button>
+                  ))}
+                  {historyFaculty.length === 0 && <div style={styles.emptyGridMsg}>No faculty members found.</div>}
+                </div>
+              )}
+
+              {!historyLoading && selectedHistoryFaculty && !selectedHistorySession && (
+                <>
+                  <button style={styles.backBtn} onClick={() => { setSelectedHistoryFaculty(null); setHistorySessions([]); }}>← All professors</button>
+                  <h4>{selectedHistoryFaculty.name}'s completed classes</h4>
+                  <div style={styles.historyList}>
+                    {historySessions.map((session) => (
+                      <button key={session._id} style={styles.historyItem} onClick={() => selectHistorySession(session)}>
+                        <strong>{session.subject}</strong>
+                        <span>{session.day || 'Class'} {session.slot ? `· ${session.slot}` : ''} {session.venue ? `· ${session.venue}` : ''}</span>
+                        <span>Batch: {session.batches?.length ? session.batches.join(', ') : 'All batches'}</span>
+                      </button>
+                    ))}
+                    {historySessions.length === 0 && <div style={styles.emptyGridMsg}>No completed classes for this professor yet.</div>}
+                  </div>
+                </>
+              )}
+
+              {!historyLoading && selectedHistorySession && (
+                <>
+                  <button style={styles.backBtn} onClick={() => { setSelectedHistorySession(null); setHistoryRoster([]); }}>← Back to classes</button>
+                  <h4>{selectedHistorySession.subject} — attendance</h4>
+                  <div style={styles.gridScroll}>
+                    <table style={styles.scheduleTable}>
+                      <thead><tr><th>Name</th><th>Roll No.</th><th>Batch</th><th>Status</th></tr></thead>
+                      <tbody>
+                        {historyRoster.map((student) => (
+                          <tr key={student._id}>
+                            <td>{student.name}</td><td>{student.rollNo || '—'}</td><td>{student.batch || '—'}</td>
+                            <td><span style={student.status === 'present' ? styles.presentBadge : styles.absentBadge}>{student.status === 'present' ? 'Present' : 'Absent'}</span></td>
+                          </tr>
+                        ))}
+                        {historyRoster.length === 0 && <tr><td colSpan="4" style={styles.emptyState}>No students found for this class's batch.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Add Faculty Modal */}
         {showAddModal && (
@@ -656,6 +836,10 @@ const FacultyList = () => {
                 </div>
               )}
 
+              {scheduleLoading ? (
+                <div style={styles.emptyGridMsg}>⏳ Loading latest schedule…</div>
+              ) : (
+              <>
               {/* Add new time slot row */}
               <div style={styles.addSlotRow}>
                 <span style={styles.addSlotLabel}>Add time slot:</span>
@@ -742,13 +926,20 @@ const FacultyList = () => {
                   </tbody>
                 </table>
               </div>
+              </>
+              )}
 
               <div style={styles.formButtons}>
                 <button type="button" onClick={() => setShowScheduleModal(false)} style={styles.cancelBtn}>
                   Close
                 </button>
-                <button type="button" onClick={handleSaveSchedule} style={styles.submitBtn} disabled={scheduleSaving}>
-                  {scheduleSaving ? 'Saving...' : '💾 Save Schedule'}
+                <button
+                  type="button"
+                  onClick={handleSaveSchedule}
+                  style={styles.submitBtn}
+                  disabled={scheduleSaving || scheduleLoading}
+                >
+                  {scheduleSaving ? 'Saving...' : scheduleLoading ? 'Loading...' : '💾 Save Schedule'}
                 </button>
               </div>
             </div>
@@ -885,6 +1076,58 @@ const styles = {
     borderRadius: '5px',
     fontSize: '16px',
     cursor: 'pointer',
+  },
+  historyBtn: {
+    padding: '12px 24px',
+    backgroundColor: '#3f51b5',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    fontSize: '16px',
+    cursor: 'pointer',
+  },
+  historyList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+  historyItem: {
+    textAlign: 'left',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+    padding: '14px',
+    border: '1px solid #dce2f0',
+    borderRadius: '8px',
+    backgroundColor: '#f8faff',
+    cursor: 'pointer',
+    color: '#2c3e50',
+    fontSize: '14px',
+  },
+  backBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#3f51b5',
+    cursor: 'pointer',
+    padding: '0 0 12px',
+    fontSize: '14px',
+    fontWeight: 'bold',
+  },
+  presentBadge: {
+    backgroundColor: '#e8f5e9',
+    color: '#2e7d32',
+    padding: '4px 10px',
+    borderRadius: '12px',
+    fontWeight: 'bold',
+    fontSize: '12px',
+  },
+  absentBadge: {
+    backgroundColor: '#ffebee',
+    color: '#c62828',
+    padding: '4px 10px',
+    borderRadius: '12px',
+    fontWeight: 'bold',
+    fontSize: '12px',
   },
   tableContainer: {
     backgroundColor: 'white',
