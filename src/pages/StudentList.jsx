@@ -490,11 +490,15 @@ const StudentList = () => {
     return value || 'N/A';
   };
 
+  // Loading state with navbar visible
   if (loading) {
     return (
       <>
         <Navbar />
-        <div style={styles.loading}>Loading students...</div>
+        <div style={styles.loadingContainer}>
+          <div style={styles.loadingSpinner} />
+          <p style={styles.loadingText}>Loading students...</p>
+        </div>
       </>
     );
   }
@@ -512,11 +516,11 @@ const StudentList = () => {
           <div style={styles.headerRight}>
             <div style={styles.stats}>
               <span style={styles.statsBadge}>Total: {allStudents.length}</span>
-              <span style={{...styles.statsBadge, backgroundColor: '#e8f5e9', color: '#2e7d32'}}>
+              <span style={{...styles.statsBadge, backgroundColor: '#ECFDF5', color: '#065F46'}}>
                 Showing: {sortedData.length}
               </span>
               {selectedStudents.length > 0 && (
-                <span style={{...styles.statsBadge, backgroundColor: '#fff3e0', color: '#e65100'}}>
+                <span style={{...styles.statsBadge, backgroundColor: '#FEF3C7', color: '#92400E'}}>
                   Selected: {selectedStudents.length}
                 </span>
               )}
@@ -532,8 +536,11 @@ const StudentList = () => {
         {showBulkEdit && (
           <div style={styles.modalOverlay}>
             <div style={styles.modal}>
-              <h3>Bulk Edit Students</h3>
-              <p>Update {selectedStudents.length} selected students</p>
+              <div style={styles.modalHeader}>
+                <h3 style={styles.modalTitle}>✏️ Bulk Edit Students</h3>
+                <button onClick={() => setShowBulkEdit(false)} style={styles.closeBtn}>✕</button>
+              </div>
+              <p style={styles.modalSubtitle}>Update {selectedStudents.length} selected students</p>
               <div style={styles.bulkEditForm}>
                 <select
                   onChange={(e) => {
@@ -576,28 +583,28 @@ const StudentList = () => {
           <div style={styles.controlsRight}>
             <button 
               onClick={() => setShowAddModal(true)} 
-              style={{...styles.actionBtn, backgroundColor: '#4CAF50'}}
+              style={{...styles.actionBtn, backgroundColor: '#10B981'}}
             >
               ➕ Add Student
             </button>
-            <button onClick={handleExportCSV} style={{...styles.actionBtn, backgroundColor: '#2196F3'}}>
+            <button onClick={handleExportCSV} style={{...styles.actionBtn, backgroundColor: '#3B82F6'}}>
               📥 Export CSV
             </button>
             <button 
               onClick={() => fileInputRef.current.click()} 
-              style={{...styles.actionBtn, backgroundColor: '#FF9800'}}
+              style={{...styles.actionBtn, backgroundColor: '#F59E0B'}}
             >
               📤 Import CSV
             </button>
             <button 
               onClick={handleGenerateAllPasswords} 
-              style={{...styles.actionBtn, backgroundColor: '#9C27B0'}}
+              style={{...styles.actionBtn, backgroundColor: '#8B5CF6'}}
             >
               🔑 Generate All Passwords
             </button>
             <button 
               onClick={scrollToBottom} 
-              style={{...styles.actionBtn, backgroundColor: '#607D8B'}}
+              style={{...styles.actionBtn, backgroundColor: '#6B7280'}}
               title="Go to bottom of the list"
             >
               ⬇️ Go to Bottom
@@ -611,15 +618,15 @@ const StudentList = () => {
             />
             {selectedStudents.length > 0 && (
               <>
-                <button onClick={handleBulkEdit} style={{...styles.actionBtn, backgroundColor: '#2196F3'}}>
+                <button onClick={handleBulkEdit} style={{...styles.actionBtn, backgroundColor: '#3B82F6'}}>
                   ✏️ Bulk Edit
                 </button>
-                <button onClick={handleBulkDelete} style={{...styles.actionBtn, backgroundColor: '#f44336'}}>
+                <button onClick={handleBulkDelete} style={{...styles.actionBtn, backgroundColor: '#EF4444'}}>
                   🗑️ Delete Selected
                 </button>
               </>
             )}
-            <button onClick={fetchStudents} style={{...styles.actionBtn, backgroundColor: '#9E9E9E'}}>
+            <button onClick={fetchStudents} style={{...styles.actionBtn, backgroundColor: '#9CA3AF'}}>
               🔄 Refresh
             </button>
           </div>
@@ -674,7 +681,7 @@ const StudentList = () => {
                 sortedData.map((student, index) => (
                   <tr key={student._id} style={{
                     ...styles.row,
-                    backgroundColor: selectedStudents.includes(student._id) ? '#e3f2fd' : 'white'
+                    backgroundColor: selectedStudents.includes(student._id) ? '#EFF6FF' : 'white'
                   }}>
                     <td style={styles.checkboxCol}>
                       <input
@@ -722,7 +729,7 @@ const StudentList = () => {
           <div style={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
             <div style={styles.modalLarge} onClick={(e) => e.stopPropagation()}>
               <div style={styles.modalHeader}>
-                <h2>➕ Add New Student</h2>
+                <h2 style={styles.modalTitle}>➕ Add New Student</h2>
                 <button 
                   onClick={() => setShowAddModal(false)} 
                   style={styles.closeBtn}
@@ -734,7 +741,7 @@ const StudentList = () => {
               <form onSubmit={handleAddStudent} style={styles.addForm}>
                 <div style={styles.formGrid}>
                   <div style={styles.formGroup}>
-                    <label>Full Name *</label>
+                    <label style={styles.formLabel}>Full Name *</label>
                     <input
                       type="text"
                       placeholder="Enter full name"
@@ -746,7 +753,7 @@ const StudentList = () => {
                   </div>
                   
                   <div style={styles.formGroup}>
-                    <label>Email *</label>
+                    <label style={styles.formLabel}>Email *</label>
                     <input
                       type="email"
                       placeholder="Enter email"
@@ -758,7 +765,7 @@ const StudentList = () => {
                   </div>
                   
                   <div style={styles.formGroup}>
-                    <label>Branch *</label>
+                    <label style={styles.formLabel}>Branch *</label>
                     <select
                       value={newStudent.branch}
                       onChange={(e) => setNewStudent({...newStudent, branch: e.target.value})}
@@ -778,7 +785,7 @@ const StudentList = () => {
                   </div>
                   
                   <div style={styles.formGroup}>
-                    <label>Phone No. *</label>
+                    <label style={styles.formLabel}>Phone No. *</label>
                     <input
                       type="text"
                       placeholder="Enter phone number"
@@ -790,7 +797,7 @@ const StudentList = () => {
                   </div>
                   
                   <div style={styles.formGroup}>
-                    <label>Date of Birth *</label>
+                    <label style={styles.formLabel}>Date of Birth *</label>
                     <input
                       type="date"
                       value={newStudent.dob}
@@ -801,7 +808,7 @@ const StudentList = () => {
                   </div>
                   
                   <div style={styles.formGroup}>
-                    <label>Roll No. *</label>
+                    <label style={styles.formLabel}>Roll No. *</label>
                     <input
                       type="text"
                       placeholder="Enter roll number"
@@ -813,7 +820,7 @@ const StudentList = () => {
                   </div>
                   
                   <div style={styles.formGroup}>
-                    <label>Father's Name *</label>
+                    <label style={styles.formLabel}>Father's Name *</label>
                     <input
                       type="text"
                       placeholder="Enter father's name"
@@ -825,7 +832,7 @@ const StudentList = () => {
                   </div>
                   
                   <div style={styles.formGroup}>
-                    <label>Mother's Name *</label>
+                    <label style={styles.formLabel}>Mother's Name *</label>
                     <input
                       type="text"
                       placeholder="Enter mother's name"
@@ -837,7 +844,7 @@ const StudentList = () => {
                   </div>
                   
                   <div style={styles.formGroup}>
-                    <label>Slot Number</label>
+                    <label style={styles.formLabel}>Slot Number</label>
                     <select
                       value={newStudent.slotNumber}
                       onChange={(e) => setNewStudent({...newStudent, slotNumber: parseInt(e.target.value)})}
@@ -859,7 +866,7 @@ const StudentList = () => {
                   </button>
                   <button 
                     type="submit" 
-                    style={{...styles.submitBtn, backgroundColor: '#4CAF50'}} 
+                    style={styles.submitBtn} 
                     disabled={addLoading}
                   >
                     {addLoading ? 'Adding...' : '➕ Add Student'}
@@ -888,46 +895,73 @@ const styles = {
     padding: '20px',
     maxWidth: '1400px',
     margin: '0 auto',
-    fontFamily: 'Arial, sans-serif',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    backgroundColor: '#F9FAFB',
+    minHeight: 'calc(100vh - 64px)'
+  },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 'calc(100vh - 64px)',
+    backgroundColor: '#F9FAFB',
+    padding: '40px'
+  },
+  loadingSpinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid rgba(102, 126, 234, 0.2)',
+    borderTop: '3px solid #667eea',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite'
+  },
+  loadingText: {
+    color: '#4B5563',
+    marginTop: '16px',
+    fontSize: '16px',
+    fontWeight: '500'
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '20px',
-    paddingBottom: '15px',
-    borderBottom: '1px solid #eee',
+    marginBottom: '24px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid #E5E7EB',
     marginTop: '20px',
     flexWrap: 'wrap',
-    gap: '10px',
+    gap: '10px'
   },
   title: {
     margin: 0,
-    color: '#2c3e50',
+    color: '#1F2937',
+    fontSize: '28px',
+    fontWeight: '700'
   },
   subtitle: {
-    margin: '5px 0 0',
-    color: '#666',
-    fontSize: '14px',
+    margin: '4px 0 0',
+    color: '#6B7280',
+    fontSize: '14px'
   },
   headerRight: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '10px'
   },
   stats: {
     display: 'flex',
     gap: '10px',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   statsBadge: {
     padding: '8px 16px',
-    backgroundColor: '#e3f2fd',
-    color: '#1976d2',
+    backgroundColor: '#EEF2FF',
+    color: '#4F46E5',
     borderRadius: '20px',
     fontSize: '14px',
-    fontWeight: 'bold',
-    whiteSpace: 'nowrap',
+    fontWeight: '600',
+    whiteSpace: 'nowrap'
   },
   controls: {
     display: 'flex',
@@ -935,23 +969,25 @@ const styles = {
     alignItems: 'center',
     marginBottom: '20px',
     flexWrap: 'wrap',
-    gap: '10px',
+    gap: '10px'
   },
   searchContainer: {
     display: 'flex',
     alignItems: 'center',
     position: 'relative',
     flex: '1',
-    maxWidth: '400px',
+    maxWidth: '400px'
   },
   searchInput: {
     width: '100%',
-    padding: '10px 40px 10px 15px',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
+    padding: '10px 40px 10px 16px',
+    borderRadius: '10px',
+    border: '1.5px solid #E5E7EB',
     fontSize: '14px',
-    transition: 'border-color 0.3s',
+    transition: 'all 0.2s ease',
     outline: 'none',
+    backgroundColor: 'white',
+    fontFamily: 'inherit'
   },
   clearBtn: {
     position: 'absolute',
@@ -960,147 +996,152 @@ const styles = {
     border: 'none',
     cursor: 'pointer',
     fontSize: '16px',
-    color: '#999',
-    padding: '5px',
+    color: '#9CA3AF',
+    padding: '5px'
   },
   controlsRight: {
     display: 'flex',
-    gap: '10px',
-    flexWrap: 'wrap',
+    gap: '8px',
+    flexWrap: 'wrap'
   },
   actionBtn: {
-    padding: '10px 20px',
+    padding: '8px 16px',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '14px',
-    transition: 'all 0.3s',
+    fontSize: '13px',
+    fontWeight: '600',
+    transition: 'all 0.2s ease',
     whiteSpace: 'nowrap',
+    fontFamily: 'inherit'
   },
   tableContainer: {
     backgroundColor: 'white',
-    borderRadius: '10px',
+    borderRadius: '12px',
     overflow: 'auto',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    maxHeight: 'calc(100vh - 300px)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    border: '1px solid #E5E7EB',
+    maxHeight: 'calc(100vh - 350px)'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    minWidth: '1100px',
+    minWidth: '1100px'
   },
   th: {
     padding: '12px 15px',
     textAlign: 'left',
-    backgroundColor: '#f8f9fa',
-    color: '#2c3e50',
+    backgroundColor: '#F9FAFB',
+    color: '#374151',
     fontWeight: '600',
-    borderBottom: '2px solid #e9ecef',
+    borderBottom: '2px solid #E5E7EB',
     whiteSpace: 'nowrap',
     position: 'sticky',
     top: 0,
     zIndex: 10,
+    fontSize: '13px'
   },
   td: {
     padding: '12px 15px',
-    borderBottom: '1px solid #e9ecef',
-    color: '#333',
+    borderBottom: '1px solid #F3F4F6',
+    color: '#1F2937',
     minHeight: '45px',
+    fontSize: '14px'
   },
   row: {
-    transition: 'background-color 0.2s',
+    transition: 'background-color 0.2s ease'
   },
   serialNo: {
-    padding: '12px 15px',
+    padding: '12px 10px',
     textAlign: 'center',
     fontWeight: '600',
-    color: '#666',
+    color: '#6B7280',
     width: '50px',
+    fontSize: '13px'
   },
   checkboxCol: {
     padding: '12px 10px',
     textAlign: 'center',
-    width: '40px',
+    width: '40px'
   },
   actionsCol: {
     padding: '12px 10px',
     textAlign: 'center',
-    width: '70px',
+    width: '70px'
   },
   checkbox: {
     width: '18px',
     height: '18px',
     cursor: 'pointer',
+    accentColor: '#667eea'
   },
   sortIcon: {
     fontSize: '12px',
     marginLeft: '5px',
-    opacity: 0.5,
+    opacity: 0.5
   },
   passwordContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: '8px'
   },
   passwordText: {
     fontFamily: 'monospace',
     fontSize: '13px',
-    color: '#333',
+    color: '#374151',
     padding: '4px 10px',
-    backgroundColor: '#f0f8ff',
-    borderRadius: '4px',
+    backgroundColor: '#F3F4F6',
+    borderRadius: '6px',
     minWidth: '80px',
     textAlign: 'center',
-    border: '1px solid #d1e7ff',
+    border: '1px solid #E5E7EB'
   },
   generateBtn: {
     padding: '4px 12px',
-    backgroundColor: '#FF9800',
+    backgroundColor: '#8B5CF6',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '12px',
-    fontWeight: 'bold',
-    transition: 'all 0.3s',
-    whiteSpace: 'nowrap',
+    fontWeight: '600',
+    transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap'
   },
   emptyState: {
     textAlign: 'center',
     padding: '40px',
-    color: '#999',
-  },
-  loading: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 'calc(100vh - 70px)',
-    fontSize: '18px',
-    color: '#666',
+    color: '#9CA3AF',
+    fontSize: '14px'
   },
   error: {
-    backgroundColor: '#ffebee',
-    color: '#c62828',
-    padding: '12px',
-    borderRadius: '5px',
-    marginBottom: '20px',
+    backgroundColor: '#FEF2F2',
+    color: '#DC2626',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    marginBottom: '16px',
+    border: '1px solid #FCA5A5',
+    fontSize: '14px'
   },
   success: {
-    backgroundColor: '#e8f5e9',
-    color: '#2e7d32',
-    padding: '12px',
-    borderRadius: '5px',
-    marginBottom: '20px',
+    backgroundColor: '#ECFDF5',
+    color: '#065F46',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    marginBottom: '16px',
+    border: '1px solid #A7F3D0',
+    fontSize: '14px'
   },
   editInput: {
     width: '100%',
     padding: '4px 8px',
-    border: '2px solid #2196F3',
-    borderRadius: '4px',
+    border: '2px solid #667eea',
+    borderRadius: '6px',
     fontSize: '14px',
     outline: 'none',
     backgroundColor: 'white',
+    fontFamily: 'inherit'
   },
   modalOverlay: {
     position: 'fixed',
@@ -1109,83 +1150,108 @@ const styles = {
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
+    backdropFilter: 'blur(4px)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
+    padding: '20px'
   },
   modal: {
     backgroundColor: 'white',
-    padding: '30px',
-    borderRadius: '10px',
+    padding: '32px',
+    borderRadius: '16px',
     maxWidth: '500px',
     width: '90%',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+    animation: 'slideUp 0.3s ease-out'
   },
   modalLarge: {
     backgroundColor: 'white',
-    padding: '30px',
-    borderRadius: '10px',
+    padding: '32px',
+    borderRadius: '16px',
     maxWidth: '800px',
     width: '95%',
     maxHeight: '85vh',
     overflow: 'auto',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-    position: 'relative',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+    animation: 'slideUp 0.3s ease-out'
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '20px',
-    paddingBottom: '10px',
-    borderBottom: '1px solid #eee',
+    paddingBottom: '12px',
+    borderBottom: '1px solid #E5E7EB'
+  },
+  modalTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1F2937',
+    margin: 0
+  },
+  modalSubtitle: {
+    color: '#6B7280',
+    fontSize: '14px',
+    marginTop: '-10px',
+    marginBottom: '16px'
   },
   closeBtn: {
     background: 'none',
     border: 'none',
     fontSize: '24px',
     cursor: 'pointer',
-    color: '#666',
+    color: '#6B7280',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    transition: 'all 0.2s ease'
   },
   modalFooter: {
     marginTop: '20px',
-    paddingTop: '10px',
-    borderTop: '1px solid #eee',
+    paddingTop: '12px',
+    borderTop: '1px solid #E5E7EB',
     display: 'flex',
     justifyContent: 'flex-end',
-    gap: '10px',
+    gap: '10px'
   },
   bulkEditForm: {
     display: 'flex',
     flexDirection: 'column',
     gap: '15px',
-    marginTop: '20px',
+    marginTop: '20px'
   },
   bulkEditSelect: {
-    padding: '10px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1.5px solid #E5E7EB',
     fontSize: '14px',
+    backgroundColor: 'white',
+    fontFamily: 'inherit'
   },
   cancelBtn: {
     padding: '10px 20px',
-    backgroundColor: '#9e9e9e',
+    backgroundColor: '#9CA3AF',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.2s ease'
   },
   submitBtn: {
     padding: '10px 20px',
-    backgroundColor: '#2196F3',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontSize: '14px',
+    fontWeight: '600',
     flex: 1,
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
   },
   deleteBtn: {
     background: 'none',
@@ -1194,41 +1260,106 @@ const styles = {
     fontSize: '18px',
     padding: '4px 8px',
     borderRadius: '4px',
-    transition: 'background 0.2s',
+    transition: 'all 0.2s ease'
   },
   footer: {
     marginTop: '20px',
-    padding: '15px',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
-    textAlign: 'center',
+    padding: '16px',
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    border: '1px solid #E5E7EB',
+    textAlign: 'center'
   },
   footerText: {
     margin: 0,
-    color: '#666',
-    fontSize: '14px',
+    color: '#6B7280',
+    fontSize: '14px'
   },
   addForm: {
-    marginTop: '10px',
+    marginTop: '10px'
   },
   formGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: '15px',
+    gap: '16px'
   },
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '5px',
+    gap: '6px'
+  },
+  formLabel: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#374151'
   },
   formInput: {
-    padding: '10px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1.5px solid #E5E7EB',
     fontSize: '14px',
     outline: 'none',
-    transition: 'border-color 0.3s',
-  },
+    transition: 'all 0.2s ease',
+    backgroundColor: '#FAFAFA',
+    fontFamily: 'inherit'
+  }
 };
+
+// Add CSS animations
+const styleElement = document.createElement('style');
+styleElement.textContent = `
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  button:active {
+    transform: scale(0.95);
+  }
+  .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .delete-btn:hover {
+    background-color: #FEF2F2;
+  }
+  .generate-btn:hover {
+    background-color: #7C3AED;
+    transform: translateY(-1px);
+  }
+  .close-btn:hover {
+    background-color: #F3F4F6;
+  }
+  .cancel-btn:hover {
+    background-color: #6B7280;
+  }
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background-color: white;
+  }
+  .search-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+  tr:hover {
+    background-color: #F9FAFB;
+  }
+`;
+document.head.appendChild(styleElement);
 
 export default StudentList;

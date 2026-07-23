@@ -15,10 +15,10 @@ import {
 } from '../services/api';
 
 const TEAM_CATEGORIES = [
-  { key: 'faculty', label: 'Faculty' },
-  { key: 'osc', label: 'OSC' },
-  { key: 'core', label: 'Core' },
-  { key: 'mentor', label: 'Mentors' },
+  { key: 'faculty', label: 'Faculty', icon: '👨‍🏫' },
+  { key: 'osc', label: 'OSC', icon: '⚡' },
+  { key: 'core', label: 'Core', icon: '⭐' },
+  { key: 'mentor', label: 'Mentors', icon: '🎯' },
 ];
 
 const AdminDashboard = () => {
@@ -237,8 +237,17 @@ const AdminDashboard = () => {
     }
   };
 
+  // Show loading state with navbar visible
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return (
+      <>
+        <Navbar />
+        <div style={styles.loadingContainer}>
+          <div style={styles.loadingSpinner} />
+          <p style={styles.loadingText}>Loading dashboard...</p>
+        </div>
+      </>
+    );
   }
 
   const secondaryFieldLabel = teamCategory === 'faculty' ? 'Designation' : 'Branch';
@@ -246,116 +255,77 @@ const AdminDashboard = () => {
   const currentCategoryMembers = teamMembers[teamCategory] || [];
 
   return (
-    <div style={styles.container}>
+    <>
       <Navbar />
+      <div style={styles.container}>
+        {/* Main Tabs */}
+        <div style={styles.mainTabs}>
+          <button
+            onClick={() => setActiveMainTab('societies')}
+            style={activeMainTab === 'societies' ? styles.mainTabActive : styles.mainTab}
+          >
+            <span style={styles.tabIcon}>🏢</span>
+            Societies
+          </button>
+          <button
+            onClick={() => setActiveMainTab('images')}
+            style={activeMainTab === 'images' ? styles.mainTabActive : styles.mainTab}
+          >
+            <span style={styles.tabIcon}>🖼️</span>
+            Images
+          </button>
+        </div>
 
-      <div style={styles.mainTabs}>
-        <button
-          onClick={() => setActiveMainTab('societies')}
-          style={activeMainTab === 'societies' ? styles.mainTabActive : styles.mainTab}
-        >
-          🏢 Societies
-        </button>
-        <button
-          onClick={() => setActiveMainTab('images')}
-          style={activeMainTab === 'images' ? styles.mainTabActive : styles.mainTab}
-        >
-          🖼️ Images
-        </button>
-      </div>
-
-      {activeMainTab === 'societies' && (
-        <>
-          <div style={styles.stats}>
-            <div style={styles.statCard}>
-              <h3>Total Societies</h3>
-              <p style={styles.statNumber}>{societies.length}</p>
-            </div>
-          </div>
-
-          <div style={styles.actions}>
-            <button onClick={() => setShowCreateForm(!showCreateForm)} style={styles.createBtn}>
-              {showCreateForm ? '✕ Cancel' : '+ Create New Society'}
-            </button>
-            <button onClick={() => navigate('/admin/scanner')} style={styles.scannerBtn}>
-              📷 Scan QR Code
-            </button>
-          </div>
-
-          {showCreateForm && (
-            <div style={styles.formContainer}>
-              <h3>Create New Society</h3>
-              <p style={styles.formSubtitle}>The society will receive these credentials to login</p>
-              {formError && <div style={styles.error}>{formError}</div>}
-              {formSuccess && <div style={styles.success}>{formSuccess}</div>}
-              <form onSubmit={handleCreateSociety} style={styles.form}>
-                <input
-                  type="text"
-                  placeholder="Society Name *"
-                  value={formData.societyName}
-                  onChange={(e) => setFormData({ ...formData, societyName: e.target.value })}
-                  style={styles.formInput}
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email Address *"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  style={styles.formInput}
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="Password (min 6 characters) *"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  style={styles.formInput}
-                  required
-                  minLength="6"
-                />
-                <div style={styles.formButtons}>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowCreateForm(false)} 
-                    style={styles.cancelBtn}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" style={styles.submitBtn} disabled={formLoading}>
-                    {formLoading ? 'Creating...' : 'Create Society'}
-                  </button>
+        {activeMainTab === 'societies' && (
+          <>
+            {/* Stats */}
+            <div style={styles.stats}>
+              <div style={styles.statCard}>
+                <div style={styles.statIcon}>🏛️</div>
+                <div style={styles.statContent}>
+                  <h3 style={styles.statLabel}>Total Societies</h3>
+                  <p style={styles.statNumber}>{societies.length}</p>
                 </div>
-              </form>
+              </div>
             </div>
-          )}
 
-          {/* Edit Password Modal */}
-          {showEditForm && editingSociety && (
-            <div style={styles.modalOverlay}>
-              <div style={styles.modal}>
-                <h3>Change Password for {editingSociety.societyName}</h3>
-                <p style={styles.formSubtitle}>Enter a new password for this society</p>
+            {/* Actions */}
+            <div style={styles.actions}>
+              <button onClick={() => setShowCreateForm(!showCreateForm)} style={styles.createBtn}>
+                {showCreateForm ? '✕ Cancel' : '+ Create New Society'}
+              </button>
+              <button onClick={() => navigate('/admin/scanner')} style={styles.scannerBtn}>
+                📷 Scan QR Code
+              </button>
+            </div>
+
+            {/* Create Form */}
+            {showCreateForm && (
+              <div style={styles.formContainer}>
+                <h3 style={styles.formTitle}>Create New Society</h3>
+                <p style={styles.formSubtitle}>The society will receive these credentials to login</p>
                 {formError && <div style={styles.error}>{formError}</div>}
                 {formSuccess && <div style={styles.success}>{formSuccess}</div>}
-                <form onSubmit={handleUpdatePassword} style={styles.form}>
+                <form onSubmit={handleCreateSociety} style={styles.form}>
                   <input
                     type="text"
-                    placeholder="Society Name"
+                    placeholder="Society Name *"
                     value={formData.societyName}
-                    style={{ ...styles.formInput, backgroundColor: '#f5f5f5' }}
-                    disabled
+                    onChange={(e) => setFormData({ ...formData, societyName: e.target.value })}
+                    style={styles.formInput}
+                    required
                   />
                   <input
                     type="email"
-                    placeholder="Email"
+                    placeholder="Email Address *"
                     value={formData.email}
-                    style={{ ...styles.formInput, backgroundColor: '#f5f5f5' }}
-                    disabled
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    style={styles.formInput}
+                    required
                   />
                   <input
                     type="password"
-                    placeholder="New Password (min 6 characters) *"
+                    placeholder="Password (min 6 characters) *"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     style={styles.formInput}
@@ -365,268 +335,332 @@ const AdminDashboard = () => {
                   <div style={styles.formButtons}>
                     <button 
                       type="button" 
-                      onClick={() => {
-                        setShowEditForm(false);
-                        setEditingSociety(null);
-                        setFormData({ societyName: '', email: '', password: '' });
-                      }} 
+                      onClick={() => setShowCreateForm(false)} 
                       style={styles.cancelBtn}
                     >
                       Cancel
                     </button>
                     <button type="submit" style={styles.submitBtn} disabled={formLoading}>
-                      {formLoading ? 'Updating...' : 'Update Password'}
+                      {formLoading ? 'Creating...' : 'Create Society'}
                     </button>
                   </div>
                 </form>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* View Members Modal */}
-          {showMembersModal && selectedSociety && (
-            <div style={styles.modalOverlay}>
-              <div style={styles.modalLarge}>
-                <div style={styles.modalHeader}>
-                  <h2>👥 Members of {selectedSociety.societyName}</h2>
-                  <button 
-                    onClick={() => {
-                      setShowMembersModal(false);
-                      setSelectedSociety(null);
-                      setSocietyMembers([]);
-                    }} 
-                    style={styles.closeBtn}
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                {membersLoading ? (
-                  <div style={styles.loadingSmall}>Loading members...</div>
-                ) : societyMembers.length === 0 ? (
-                  <div style={styles.emptyState}>No members added yet for this society.</div>
-                ) : (
-                  <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Name</th>
-                          <th>Branch</th>
-                          <th>Roll No</th>
-                          <th>Email</th>
-                          <th>Slot</th>
-                          <th>Status</th>
-                          <th>Created At</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {societyMembers.map((member, index) => (
-                          <tr key={member._id || index}>
-                            <td>{index + 1}</td>
-                            <td><strong>{member.name}</strong></td>
-                            <td>{member.branch}</td>
-                            <td>{member.rollNo}</td>
-                            <td>{member.email}</td>
-                            <td>
-                              <span style={{
-                                ...styles.slotBadge,
-                                backgroundColor: member.slotNumber === 1 ? '#4CAF50' : '#2196F3'
-                              }}>
-                                Slot {member.slotNumber}
-                              </span>
-                            </td>
-                            <td>
-                              <span style={{
-                                ...styles.statusBadge,
-                                backgroundColor: 
-                                  member.status === 'verified' ? '#4CAF50' :
-                                  member.status === 'rejected' ? '#f44336' :
-                                  '#FF9800'
-                              }}>
-                                {member.status === 'verified' ? '✅ Verified' :
-                                 member.status === 'rejected' ? '❌ Rejected' :
-                                 '⏳ Pending'}
-                              </span>
-                            </td>
-                            <td>{new Date(member.createdAt).toLocaleDateString()}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-                
-                <div style={styles.modalFooter}>
-                  <button 
-                    onClick={() => {
-                      setShowMembersModal(false);
-                      setSelectedSociety(null);
-                      setSocietyMembers([]);
-                    }} 
-                    style={styles.closeModalBtn}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div style={styles.tableContainer}>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Society Name</th>
-                  <th>Email</th>
-                  <th>Password</th>
-                  <th>Members</th>
-                  <th>Created At</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {societies.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" style={styles.emptyState}>No societies found. Create one above!</td>
-                  </tr>
-                ) : (
-                  societies.map((society, index) => (
-                    <tr key={society._id}>
-                      <td>{index + 1}</td>
-                      <td><strong>{society.societyName}</strong></td>
-                      <td>{society.email}</td>
-                      <td>
-                        <div style={styles.passwordContainer}>
-                          <span style={styles.passwordText}>••••••••</span>
-                          <button 
-                            onClick={() => handleEditClick(society)} 
-                            style={styles.editPasswordBtn}
-                            title="Change Password"
-                          >
-                            🔑
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <button 
-                          onClick={() => handleViewMembers(society)} 
-                          style={styles.viewMembersBtn}
-                        >
-                          👥 View Members
-                        </button>
-                      </td>
-                      <td>{new Date(society.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        <div style={styles.actionsCell}>
-                          <button 
-                            onClick={() => handleDeleteSociety(society._id)} 
-                            style={styles.deleteBtn}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {activeMainTab === 'images' && (
-        <>
-          <div style={styles.categoryTabs}>
-            {TEAM_CATEGORIES.map((cat) => (
-              <button
-                key={cat.key}
-                onClick={() => setTeamCategory(cat.key)}
-                style={teamCategory === cat.key ? styles.categoryTabActive : styles.categoryTab}
-              >
-                {cat.label} ({(teamMembers[cat.key] || []).length})
-              </button>
-            ))}
-          </div>
-
-          <div style={styles.formContainer}>
-            <h3>Add {TEAM_CATEGORIES.find((c) => c.key === teamCategory)?.label} Member</h3>
-            <p style={styles.formSubtitle}>Photos are uploaded to cloud storage — nothing depends on this laptop.</p>
-            {teamFormError && <div style={styles.error}>{teamFormError}</div>}
-            {teamFormSuccess && <div style={styles.success}>{teamFormSuccess}</div>}
-            <form onSubmit={handleTeamSubmit} style={styles.form}>
-              <input
-                type="text"
-                placeholder="Name *"
-                value={teamForm.name}
-                onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
-                style={styles.formInput}
-                required
-              />
-              {showSecondaryField && (
-                <input
-                  type="text"
-                  placeholder={secondaryFieldLabel}
-                  value={teamCategory === 'faculty' ? teamForm.designation : teamForm.branch}
-                  onChange={(e) =>
-                    setTeamForm({
-                      ...teamForm,
-                      [teamCategory === 'faculty' ? 'designation' : 'branch']: e.target.value,
-                    })
-                  }
-                  style={styles.formInput}
-                />
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleTeamImageChange}
-                style={styles.formInput}
-                required
-              />
-              {teamImagePreview && (
-                <img src={teamImagePreview} alt="Preview" style={styles.imagePreview} />
-              )}
-              <div style={styles.formButtons}>
-                <button type="submit" style={styles.submitBtn} disabled={teamFormLoading}>
-                  {teamFormLoading ? 'Uploading...' : 'Add Member'}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div style={styles.tableContainer}>
-            {teamLoading ? (
-              <div style={styles.loadingSmall}>Loading team members...</div>
-            ) : currentCategoryMembers.length === 0 ? (
-              <div style={styles.emptyState}>
-                No {TEAM_CATEGORIES.find((c) => c.key === teamCategory)?.label} members added yet.
-              </div>
-            ) : (
-              <div style={styles.teamGrid}>
-                {currentCategoryMembers.map((member) => (
-                  <div key={member.id || member._id} style={styles.teamCard}>
-                    <img src={member.imageUrl} alt={member.name} style={styles.teamThumb} />
-                    <div style={styles.teamCardName}>{member.name}</div>
-                    <div style={styles.teamCardSub}>
-                      {teamCategory === 'faculty' ? member.designation : member.branch}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteTeamMember(member.id || member._id)}
-                      style={styles.deleteBtn}
+            {/* Edit Password Modal */}
+            {showEditForm && editingSociety && (
+              <div style={styles.modalOverlay}>
+                <div style={styles.modal}>
+                  <div style={styles.modalHeader}>
+                    <h3 style={styles.modalTitle}>Change Password</h3>
+                    <button 
+                      onClick={() => {
+                        setShowEditForm(false);
+                        setEditingSociety(null);
+                        setFormData({ societyName: '', email: '', password: '' });
+                      }} 
+                      style={styles.closeBtn}
                     >
-                      Delete
+                      ✕
                     </button>
                   </div>
-                ))}
+                  <p style={styles.formSubtitle}>Enter a new password for {editingSociety.societyName}</p>
+                  {formError && <div style={styles.error}>{formError}</div>}
+                  {formSuccess && <div style={styles.success}>{formSuccess}</div>}
+                  <form onSubmit={handleUpdatePassword} style={styles.form}>
+                    <input
+                      type="text"
+                      placeholder="Society Name"
+                      value={formData.societyName}
+                      style={{ ...styles.formInput, backgroundColor: '#f5f5f5' }}
+                      disabled
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={formData.email}
+                      style={{ ...styles.formInput, backgroundColor: '#f5f5f5' }}
+                      disabled
+                    />
+                    <input
+                      type="password"
+                      placeholder="New Password (min 6 characters) *"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      style={styles.formInput}
+                      required
+                      minLength="6"
+                    />
+                    <div style={styles.formButtons}>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setShowEditForm(false);
+                          setEditingSociety(null);
+                          setFormData({ societyName: '', email: '', password: '' });
+                        }} 
+                        style={styles.cancelBtn}
+                      >
+                        Cancel
+                      </button>
+                      <button type="submit" style={styles.submitBtn} disabled={formLoading}>
+                        {formLoading ? 'Updating...' : 'Update Password'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
-          </div>
-        </>
-      )}
-    </div>
+
+            {/* View Members Modal */}
+            {showMembersModal && selectedSociety && (
+              <div style={styles.modalOverlay}>
+                <div style={styles.modalLarge}>
+                  <div style={styles.modalHeader}>
+                    <h3 style={styles.modalTitle}>👥 Members of {selectedSociety.societyName}</h3>
+                    <button 
+                      onClick={() => {
+                        setShowMembersModal(false);
+                        setSelectedSociety(null);
+                        setSocietyMembers([]);
+                      }} 
+                      style={styles.closeBtn}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  {membersLoading ? (
+                    <div style={styles.loadingSmall}>Loading members...</div>
+                  ) : societyMembers.length === 0 ? (
+                    <div style={styles.emptyState}>No members added yet for this society.</div>
+                  ) : (
+                    <div style={styles.tableContainer}>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Branch</th>
+                            <th>Roll No</th>
+                            <th>Email</th>
+                            <th>Slot</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {societyMembers.map((member, index) => (
+                            <tr key={member._id || index}>
+                              <td>{index + 1}</td>
+                              <td><strong>{member.name}</strong></td>
+                              <td>{member.branch}</td>
+                              <td>{member.rollNo}</td>
+                              <td>{member.email}</td>
+                              <td>
+                                <span style={{
+                                  ...styles.slotBadge,
+                                  backgroundColor: member.slotNumber === 1 ? '#10B981' : '#3B82F6'
+                                }}>
+                                  Slot {member.slotNumber}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{
+                                  ...styles.statusBadge,
+                                  backgroundColor: 
+                                    member.status === 'verified' ? '#10B981' :
+                                    member.status === 'rejected' ? '#EF4444' :
+                                    '#F59E0B'
+                                }}>
+                                  {member.status === 'verified' ? '✅ Verified' :
+                                   member.status === 'rejected' ? '❌ Rejected' :
+                                   '⏳ Pending'}
+                                </span>
+                              </td>
+                              <td>{new Date(member.createdAt).toLocaleDateString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  
+                  <div style={styles.modalFooter}>
+                    <button 
+                      onClick={() => {
+                        setShowMembersModal(false);
+                        setSelectedSociety(null);
+                        setSocietyMembers([]);
+                      }} 
+                      style={styles.closeModalBtn}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Societies Table */}
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Society Name</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                    <th>Members</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {societies.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={styles.emptyState}>No societies found. Create one above!</td>
+                    </tr>
+                  ) : (
+                    societies.map((society, index) => (
+                      <tr key={society._id}>
+                        <td>{index + 1}</td>
+                        <td><strong>{society.societyName}</strong></td>
+                        <td>{society.email}</td>
+                        <td>
+                          <div style={styles.passwordContainer}>
+                            <span style={styles.passwordText}>••••••••</span>
+                            <button 
+                              onClick={() => handleEditClick(society)} 
+                              style={styles.editPasswordBtn}
+                              title="Change Password"
+                            >
+                              🔑
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <button 
+                            onClick={() => handleViewMembers(society)} 
+                            style={styles.viewMembersBtn}
+                          >
+                            👥 View Members
+                          </button>
+                        </td>
+                        <td>{new Date(society.createdAt).toLocaleDateString()}</td>
+                        <td>
+                          <div style={styles.actionsCell}>
+                            <button 
+                              onClick={() => handleDeleteSociety(society._id)} 
+                              style={styles.deleteBtn}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {activeMainTab === 'images' && (
+          <>
+            <div style={styles.categoryTabs}>
+              {TEAM_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  onClick={() => setTeamCategory(cat.key)}
+                  style={teamCategory === cat.key ? styles.categoryTabActive : styles.categoryTab}
+                >
+                  {cat.icon} {cat.label} ({(teamMembers[cat.key] || []).length})
+                </button>
+              ))}
+            </div>
+
+            <div style={styles.formContainer}>
+              <h3 style={styles.formTitle}>Add {TEAM_CATEGORIES.find((c) => c.key === teamCategory)?.label} Member</h3>
+              <p style={styles.formSubtitle}>Photos are uploaded to cloud storage</p>
+              {teamFormError && <div style={styles.error}>{teamFormError}</div>}
+              {teamFormSuccess && <div style={styles.success}>{teamFormSuccess}</div>}
+              <form onSubmit={handleTeamSubmit} style={styles.form}>
+                <input
+                  type="text"
+                  placeholder="Name *"
+                  value={teamForm.name}
+                  onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
+                  style={styles.formInput}
+                  required
+                />
+                {showSecondaryField && (
+                  <input
+                    type="text"
+                    placeholder={secondaryFieldLabel}
+                    value={teamCategory === 'faculty' ? teamForm.designation : teamForm.branch}
+                    onChange={(e) =>
+                      setTeamForm({
+                        ...teamForm,
+                        [teamCategory === 'faculty' ? 'designation' : 'branch']: e.target.value,
+                      })
+                    }
+                    style={styles.formInput}
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleTeamImageChange}
+                  style={styles.fileInput}
+                  required
+                />
+                {teamImagePreview && (
+                  <div style={styles.previewContainer}>
+                    <img src={teamImagePreview} alt="Preview" style={styles.imagePreview} />
+                  </div>
+                )}
+                <div style={styles.formButtons}>
+                  <button type="submit" style={styles.submitBtn} disabled={teamFormLoading}>
+                    {teamFormLoading ? 'Uploading...' : 'Add Member'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div style={styles.tableContainer}>
+              {teamLoading ? (
+                <div style={styles.loadingSmall}>Loading team members...</div>
+              ) : currentCategoryMembers.length === 0 ? (
+                <div style={styles.emptyState}>
+                  No {TEAM_CATEGORIES.find((c) => c.key === teamCategory)?.label} members added yet.
+                </div>
+              ) : (
+                <div style={styles.teamGrid}>
+                  {currentCategoryMembers.map((member) => (
+                    <div key={member.id || member._id} style={styles.teamCard}>
+                      <img src={member.imageUrl} alt={member.name} style={styles.teamThumb} />
+                      <div style={styles.teamCardName}>{member.name}</div>
+                      <div style={styles.teamCardSub}>
+                        {teamCategory === 'faculty' ? member.designation : member.branch}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteTeamMember(member.id || member._id)}
+                        style={styles.deleteBtn}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 };
 
@@ -635,188 +669,246 @@ const styles = {
     padding: '20px',
     maxWidth: '1200px',
     margin: '0 auto',
-    fontFamily: 'Arial, sans-serif',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    backgroundColor: '#F9FAFB',
+    minHeight: 'calc(100vh - 64px)' // Subtract navbar height
+  },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 'calc(100vh - 64px)', // Subtract navbar height
+    backgroundColor: '#F9FAFB',
+    padding: '40px'
+  },
+  loadingSpinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid rgba(102, 126, 234, 0.2)',
+    borderTop: '3px solid #667eea',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite'
+  },
+  loadingText: {
+    color: '#4B5563',
+    marginTop: '16px',
+    fontSize: '16px',
+    fontWeight: '500'
   },
   mainTabs: {
     display: 'flex',
-    gap: '10px',
+    gap: '8px',
     marginTop: '20px',
-    marginBottom: '10px',
-    borderBottom: '2px solid #eee',
+    marginBottom: '24px',
+    backgroundColor: 'white',
+    padding: '6px',
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    border: '1px solid #E5E7EB'
+  },
+  tabIcon: {
+    marginRight: '8px'
   },
   mainTab: {
-    padding: '12px 20px',
+    padding: '10px 24px',
     border: 'none',
     background: 'none',
-    fontSize: '15px',
-    fontWeight: '600',
-    color: '#666',
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#6B7280',
     cursor: 'pointer',
-    borderBottom: '3px solid transparent',
+    borderRadius: '8px',
+    transition: 'all 0.2s ease',
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   mainTabActive: {
-    padding: '12px 20px',
+    padding: '10px 24px',
     border: 'none',
-    background: 'none',
-    fontSize: '15px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    fontSize: '14px',
     fontWeight: '600',
-    color: '#2196F3',
+    color: 'white',
     cursor: 'pointer',
-    borderBottom: '3px solid #2196F3',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.3)',
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   categoryTabs: {
     display: 'flex',
     gap: '8px',
     marginBottom: '20px',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   categoryTab: {
     padding: '8px 16px',
     borderRadius: '20px',
-    border: '1px solid #ddd',
+    border: '1px solid #E5E7EB',
     backgroundColor: 'white',
-    color: '#666',
+    color: '#6B7280',
     cursor: 'pointer',
     fontSize: '13px',
-    fontWeight: '600',
+    fontWeight: '500',
+    transition: 'all 0.2s ease'
   },
   categoryTabActive: {
     padding: '8px 16px',
     borderRadius: '20px',
-    border: '1px solid #2196F3',
-    backgroundColor: '#2196F3',
+    border: '1px solid #667eea',
+    backgroundColor: '#667eea',
     color: 'white',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '600',
-  },
-  imagePreview: {
-    width: '100px',
-    height: '100px',
-    objectFit: 'cover',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-  },
-  teamGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: '16px',
-    padding: '20px',
-  },
-  teamCard: {
-    backgroundColor: 'white',
-    borderRadius: '10px',
-    padding: '12px',
-    textAlign: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  teamThumb: {
-    width: '100%',
-    aspectRatio: '1',
-    objectFit: 'cover',
-    borderRadius: '8px',
-    marginBottom: '8px',
-  },
-  teamCardName: {
-    fontWeight: '600',
-    fontSize: '14px',
-  },
-  teamCardSub: {
-    fontSize: '12px',
-    color: '#888',
-    marginBottom: '8px',
+    boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
   },
   stats: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginBottom: '30px',
-    marginTop: '20px',
+    gap: '16px',
+    marginBottom: '24px'
   },
   statCard: {
     backgroundColor: 'white',
     padding: '20px',
-    borderRadius: '10px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    textAlign: 'center',
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    border: '1px solid #E5E7EB',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  statIcon: {
+    fontSize: '32px'
+  },
+  statContent: {
+    flex: 1
+  },
+  statLabel: {
+    fontSize: '14px',
+    color: '#6B7280',
+    margin: '0 0 4px 0',
+    fontWeight: '500'
   },
   statNumber: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    color: '#2196F3',
-    margin: '10px 0 0',
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#1F2937',
+    margin: 0
   },
   actions: {
     marginBottom: '20px',
     display: 'flex',
     gap: '10px',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   createBtn: {
-    padding: '12px 24px',
-    backgroundColor: '#4CAF50',
+    padding: '10px 24px',
+    backgroundColor: '#10B981',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
-    fontSize: '16px',
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontWeight: '600',
     cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
   },
   scannerBtn: {
-    padding: '12px 24px',
-    backgroundColor: '#FF5722',
+    padding: '10px 24px',
+    backgroundColor: '#8B5CF6',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
-    fontSize: '16px',
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontWeight: '600',
     cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(139, 92, 246, 0.2)'
   },
   formContainer: {
     backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '10px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    marginBottom: '20px',
+    padding: '24px',
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    border: '1px solid #E5E7EB',
+    marginBottom: '20px'
+  },
+  formTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#1F2937',
+    margin: '0 0 4px 0'
   },
   formSubtitle: {
-    color: '#666',
+    color: '#6B7280',
     fontSize: '14px',
-    marginBottom: '15px',
+    marginBottom: '16px'
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
-    maxWidth: '400px',
+    gap: '12px',
+    maxWidth: '400px'
   },
   formInput: {
-    padding: '10px',
-    borderRadius: '5px',
-    border: '1px solid #ddd',
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1.5px solid #E5E7EB',
     fontSize: '14px',
+    transition: 'all 0.2s ease',
+    backgroundColor: '#FAFAFA'
+  },
+  fileInput: {
+    padding: '8px',
+    borderRadius: '10px',
+    border: '1.5px solid #E5E7EB',
+    fontSize: '14px',
+    backgroundColor: '#FAFAFA'
+  },
+  previewContainer: {
+    marginTop: '4px'
+  },
+  imagePreview: {
+    width: '100px',
+    height: '100px',
+    objectFit: 'cover',
+    borderRadius: '10px',
+    border: '2px solid #E5E7EB'
   },
   formButtons: {
     display: 'flex',
     gap: '10px',
-    marginTop: '5px',
+    marginTop: '4px'
   },
   submitBtn: {
     padding: '10px 20px',
-    backgroundColor: '#2196F3',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontSize: '14px',
+    fontWeight: '600',
     flex: 1,
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
   },
   cancelBtn: {
     padding: '10px 20px',
-    backgroundColor: '#9e9e9e',
+    backgroundColor: '#9CA3AF',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontSize: '14px',
+    fontWeight: '500'
   },
   modalOverlay: {
     position: 'fixed',
@@ -825,85 +917,101 @@ const styles = {
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
+    backdropFilter: 'blur(4px)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
+    padding: '20px'
   },
   modal: {
     backgroundColor: 'white',
-    padding: '30px',
-    borderRadius: '10px',
+    padding: '32px',
+    borderRadius: '16px',
     maxWidth: '450px',
     width: '100%',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+    animation: 'slideUp 0.3s ease-out'
   },
   modalLarge: {
     backgroundColor: 'white',
-    padding: '30px',
-    borderRadius: '10px',
+    padding: '32px',
+    borderRadius: '16px',
     maxWidth: '900px',
     width: '95%',
     maxHeight: '80vh',
     overflow: 'auto',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+    animation: 'slideUp 0.3s ease-out'
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '20px',
-    paddingBottom: '10px',
-    borderBottom: '1px solid #eee',
+    paddingBottom: '12px',
+    borderBottom: '1px solid #E5E7EB'
+  },
+  modalTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#1F2937',
+    margin: 0
   },
   closeBtn: {
     background: 'none',
     border: 'none',
-    fontSize: '24px',
+    fontSize: '22px',
     cursor: 'pointer',
-    color: '#666',
+    color: '#6B7280',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    transition: 'all 0.2s ease'
   },
   modalFooter: {
     marginTop: '20px',
-    paddingTop: '10px',
-    borderTop: '1px solid #eee',
+    paddingTop: '12px',
+    borderTop: '1px solid #E5E7EB',
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-end'
   },
   closeModalBtn: {
     padding: '8px 20px',
-    backgroundColor: '#666',
+    backgroundColor: '#6B7280',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500'
   },
   tableContainer: {
     backgroundColor: 'white',
-    borderRadius: '10px',
+    borderRadius: '12px',
     overflow: 'auto',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    marginBottom: '20px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    border: '1px solid #E5E7EB',
+    marginBottom: '20px'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    minWidth: '700px',
+    minWidth: '700px'
   },
   emptyState: {
     textAlign: 'center',
     padding: '40px',
-    color: '#999',
+    color: '#9CA3AF'
   },
   passwordContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '5px',
+    gap: '5px'
   },
   passwordText: {
     fontFamily: 'monospace',
     fontSize: '14px',
-    color: '#666',
+    color: '#6B7280'
   },
   editPasswordBtn: {
     background: 'none',
@@ -912,72 +1020,168 @@ const styles = {
     fontSize: '16px',
     padding: '4px 8px',
     borderRadius: '4px',
-    transition: 'background 0.2s',
+    transition: 'background 0.2s ease'
   },
   viewMembersBtn: {
     padding: '4px 12px',
-    backgroundColor: '#2196F3',
+    backgroundColor: '#3B82F6',
     color: 'white',
     border: 'none',
-    borderRadius: '3px',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '12px',
+    fontWeight: '500'
   },
   slotBadge: {
     padding: '2px 10px',
     borderRadius: '12px',
     color: 'white',
     fontSize: '11px',
-    fontWeight: 'bold',
+    fontWeight: '600'
   },
   statusBadge: {
     padding: '4px 10px',
     borderRadius: '12px',
     fontSize: '12px',
-    fontWeight: 'bold',
+    fontWeight: '600',
     display: 'inline-block',
-    color: 'white',
+    color: 'white'
   },
   actionsCell: {
     display: 'flex',
     gap: '5px',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   deleteBtn: {
     padding: '4px 12px',
-    backgroundColor: '#f44336',
+    backgroundColor: '#EF4444',
     color: 'white',
     border: 'none',
-    borderRadius: '3px',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '12px',
-  },
-  loading: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    fontSize: '18px',
+    fontWeight: '500'
   },
   loadingSmall: {
     textAlign: 'center',
     padding: '40px',
-    color: '#666',
+    color: '#6B7280'
   },
   error: {
-    backgroundColor: '#ffebee',
-    color: '#c62828',
-    padding: '10px',
-    borderRadius: '5px',
+    backgroundColor: '#FEF2F2',
+    color: '#DC2626',
+    padding: '10px 14px',
+    borderRadius: '8px',
     marginBottom: '10px',
+    border: '1px solid #FCA5A5'
   },
   success: {
-    backgroundColor: '#e8f5e9',
-    color: '#2e7d32',
-    padding: '10px',
-    borderRadius: '5px',
+    backgroundColor: '#ECFDF5',
+    color: '#065F46',
+    padding: '10px 14px',
+    borderRadius: '8px',
     marginBottom: '10px',
+    border: '1px solid #A7F3D0'
   },
+  teamGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+    gap: '16px',
+    padding: '20px'
+  },
+  teamCard: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '12px',
+    textAlign: 'center',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.06)',
+    border: '1px solid #E5E7EB',
+    transition: 'all 0.2s ease'
+  },
+  teamThumb: {
+    width: '100%',
+    aspectRatio: '1',
+    objectFit: 'cover',
+    borderRadius: '8px',
+    marginBottom: '8px'
+  },
+  teamCardName: {
+    fontWeight: '600',
+    fontSize: '14px',
+    color: '#1F2937'
+  },
+  teamCardSub: {
+    fontSize: '12px',
+    color: '#6B7280',
+    marginBottom: '8px'
+  }
 };
+
+// Add CSS animations
+const styleElement = document.createElement('style');
+styleElement.textContent = `
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  button:active {
+    transform: scale(0.98);
+  }
+  .main-tab:hover {
+    background-color: #F3F4F6;
+  }
+  .main-tab-active:hover {
+    opacity: 0.9;
+  }
+  .create-btn:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+  }
+  .scanner-btn:hover {
+    background-color: #7C3AED;
+    transform: translateY(-1px);
+  }
+  .submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  .delete-btn:hover {
+    background-color: #DC2626;
+  }
+  .view-members-btn:hover {
+    background-color: #2563EB;
+  }
+  .close-btn:hover {
+    background-color: #F3F4F6;
+  }
+  .category-tab:hover {
+    border-color: #667eea;
+    color: #667eea;
+  }
+  .team-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .edit-password-btn:hover {
+    background-color: #F3F4F6;
+  }
+  input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background-color: white;
+  }
+`;
+document.head.appendChild(styleElement);
 
 export default AdminDashboard;
