@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Html5Qrcode } from 'html5-qrcode';
 
-import { getEvents, createEvent, updateEvent, updateEventStatus, deleteEvent, scanTicket, getTicketStats, getEventRegistrations, uploadEventImage, SERVER_URL } from '../services/api';
+import { getEvents, createEvent, updateEvent, updateEventStatus, updateEventSlotCount, updateEventSlot, deleteEvent, scanTicket, getTicketStats, getEventRegistrations, uploadEventImage, SERVER_URL } from '../services/api';
+
+const SLOT_COUNTS = [0, 1, 2, 3, 4, 5];
 
 const STATUS_OPTIONS = ['live', 'upcoming', 'past'];
 
@@ -39,6 +41,7 @@ const EventList = () => {
   const [registrations, setRegistrations] = useState([]);
   const [registrationsLoading, setRegistrationsLoading] = useState(false);
   const [registrationFilter, setRegistrationFilter] = useState('pending'); // 'pending' | 'checkedIn'
+  const [slotFilter, setSlotFilter] = useState('all'); // 'all' | slot number
 
   // ---- Event photo upload state ----
   const photoInputRef = useRef(null);
@@ -161,6 +164,39 @@ const EventList = () => {
     }
   };
 
+  // ---- Slots ----
+
+  const handleSlotCountChange = async (eventId, slotCount) => {
+    try {
+      const data = await updateEventSlotCount(eventId, slotCount);
+      setEvents((prev) => prev.map((ev) => (ev._id === eventId ? data.event : ev)));
+    } catch (err) {
+      setMessage('Failed to update slot count: ' + (err.response?.data?.error || err.message));
+      setMessageType('error');
+    }
+  };
+
+  const handleSlotStatusChange = async (eventId, slotNumber, status) => {
+    try {
+      const data = await updateEventSlot(eventId, slotNumber, { status });
+      setEvents((prev) => prev.map((ev) => (ev._id === eventId ? data.event : ev)));
+    } catch (err) {
+      setMessage('Failed to update slot status: ' + (err.response?.data?.error || err.message));
+      setMessageType('error');
+    }
+  };
+
+  const handleSlotDetailSave = async (eventId, slotNumber, field, value) => {
+    try {
+      const data = await updateEventSlot(eventId, slotNumber, { [field]: value });
+      setEvents((prev) => prev.map((ev) => (ev._id === eventId ? data.event : ev)));
+      setEditingEvent((prev) => (prev && prev._id === eventId ? data.event : prev));
+    } catch (err) {
+      setMessage(`Failed to update slot ${field}: ` + (err.response?.data?.error || err.message));
+      setMessageType('error');
+    }
+  };
+
   // ---- Event photo upload ----
 
   const handlePhotoButtonClick = (event) => {
@@ -207,6 +243,7 @@ const EventList = () => {
   const openRegistrations = async (event) => {
     setViewingEvent(event);
     setRegistrationFilter('pending');
+    setSlotFilter('all');
     setRegistrations([]);
     setRegistrationsLoading(true);
     try {
@@ -223,6 +260,7 @@ const EventList = () => {
   const closeRegistrations = () => {
     setViewingEvent(null);
     setRegistrations([]);
+    setSlotFilter('all');
   };
 
   // ---- Ticket scanning ----
@@ -277,6 +315,7 @@ const EventList = () => {
         studentName: student?.name,
         studentEmail: student?.email,
         studentBranch: student?.branch,
+        slot: result.ticket?.slot || 0,
       });
     } catch (err) {
       const data = err.response?.data;
@@ -285,6 +324,7 @@ const EventList = () => {
         message: data?.error || 'Invalid or unrecognized QR code',
         studentName: data?.ticket?.student?.name,
         scannedAt: data?.scannedAt,
+        slot: data?.ticket?.slot || 0,
       });
     }
 
@@ -348,6 +388,66 @@ const EventList = () => {
       })}
     </div>
   );
+
+  const renderSlotsCell = (event) => {
+    const slotCount = event.slotCount || 0;
+    return (
+      <div style={styles.slotsCell}>
+        <div style={styles.toggleGroup}>
+          {SLOT_COUNTS.map((n) => {
+            const isActive = slotCount === n;
+            return (
+              <button
+                key={n}
+                onClick={() => handleSlotCountChange(event._id, n)}
+                style={{
+                  ...styles.toggleBtnSmall,
+                  backgroundColor: isActive ? '#3f51b5' : '#f0f0f0',
+                  color: isActive ? 'white' : '#666',
+                  fontWeight: isActive ? 'bold' : 'normal',
+                }}
+              >
+                {n}
+              </button>
+            );
+          })}
+        </div>
+
+        {slotCount > 0 && (
+          <div style={styles.slotList}>
+            {(event.slots || []).map((slot) => (
+              <div key={slot.number} style={styles.slotRow}>
+                <span style={styles.slotLabel}>
+                  Slot {slot.number}{slot.time ? ` · ${slot.time}` : ''}{slot.venue ? ` · ${slot.venue}` : ''}
+                </span>
+                <div style={styles.toggleGroup}>
+                  {STATUS_OPTIONS.map((status) => {
+                    const isActive = slot.status === status;
+                    const cfg = STATUS_STYLES[status];
+                    return (
+                      <button
+                        key={status}
+                        onClick={() => handleSlotStatusChange(event._id, slot.number, status)}
+                        style={{
+                          ...styles.toggleBtnSmall,
+                          backgroundColor: isActive ? cfg.color : '#f0f0f0',
+                          color: isActive ? 'white' : '#666',
+                          fontWeight: isActive ? 'bold' : 'normal',
+                        }}
+                      >
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            <p style={styles.slotHint}>Edit slot time/venue from Edit.</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (loading) {
     return <div style={styles.loading}>Loading...</div>;
@@ -476,6 +576,33 @@ const EventList = () => {
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
             <h3>Edit Event</h3>
+            {editingEvent.slotCount > 0 && (
+              <div style={styles.slotEditorBox}>
+                <p style={styles.slotHint}>
+                  This event has {editingEvent.slotCount} slot{editingEvent.slotCount !== 1 ? 's' : ''}. Set each slot's
+                  time/venue below (status is toggled from the table).
+                </p>
+                {(editingEvent.slots || []).map((slot) => (
+                  <div key={slot.number} style={styles.slotEditorRow}>
+                    <span style={styles.slotEditorLabel}>Slot {slot.number}</span>
+                    <input
+                      type="text"
+                      placeholder="Time"
+                      defaultValue={slot.time}
+                      onBlur={(e) => handleSlotDetailSave(editingEvent._id, slot.number, 'time', e.target.value)}
+                      style={styles.slotEditorInput}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Venue"
+                      defaultValue={slot.venue}
+                      onBlur={(e) => handleSlotDetailSave(editingEvent._id, slot.number, 'venue', e.target.value)}
+                      style={styles.slotEditorInput}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
             {formError && <div style={styles.error}>{formError}</div>}
             {formSuccess && <div style={styles.success}>{formSuccess}</div>}
             <form onSubmit={handleUpdateEvent} style={styles.form}>
@@ -563,6 +690,7 @@ const EventList = () => {
               <th>Time</th>
               <th>Venue</th>
               <th>Status</th>
+              <th>Slots</th>
               <th>Image</th>
               <th>Tickets</th>
               <th>Actions</th>
@@ -582,6 +710,7 @@ const EventList = () => {
                   <td>{event.time}</td>
                   <td>{event.venue}</td>
                   <td>{renderStatusToggle(event)}</td>
+                  <td>{renderSlotsCell(event)}</td>
                   <td>
                     <div style={styles.photoCell}>
                       {event.imageUrl ? (
@@ -683,10 +812,16 @@ const EventList = () => {
                     <p style={{ margin: '2px 0' }}><strong>Name:</strong> {scanResult.studentName || '-'}</p>
                     <p style={{ margin: '2px 0' }}><strong>Branch:</strong> {scanResult.studentBranch || '-'}</p>
                     <p style={{ margin: '2px 0' }}><strong>Email:</strong> {scanResult.studentEmail || '-'}</p>
+                    {!!scanResult.slot && (
+                      <p style={{ margin: '2px 0' }}><strong>Slot:</strong> {scanResult.slot}</p>
+                    )}
                   </>
                 )}
                 {scanResult.type === 'error' && scanResult.studentName && (
-                  <p style={{ margin: '2px 0' }}>Already checked in: <strong>{scanResult.studentName}</strong></p>
+                  <p style={{ margin: '2px 0' }}>
+                    Already checked in: <strong>{scanResult.studentName}</strong>
+                    {!!scanResult.slot && <> (Slot {scanResult.slot})</>}
+                  </p>
                 )}
               </div>
             )}
@@ -736,6 +871,37 @@ const EventList = () => {
               </button>
             </div>
 
+            {/* Toggle: All | Slot 1 | Slot 2 ... — only shown for slotted events */}
+            {viewingEvent.slotCount > 0 && (
+              <div style={styles.slotFilterRow}>
+                <button
+                  onClick={() => setSlotFilter('all')}
+                  style={{
+                    ...styles.toggleBtnSmall,
+                    backgroundColor: slotFilter === 'all' ? '#3f51b5' : '#f0f0f0',
+                    color: slotFilter === 'all' ? 'white' : '#666',
+                    fontWeight: slotFilter === 'all' ? 'bold' : 'normal',
+                  }}
+                >
+                  All Slots
+                </button>
+                {Array.from({ length: viewingEvent.slotCount }, (_, i) => i + 1).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setSlotFilter(n)}
+                    style={{
+                      ...styles.toggleBtnSmall,
+                      backgroundColor: slotFilter === n ? '#3f51b5' : '#f0f0f0',
+                      color: slotFilter === n ? 'white' : '#666',
+                      fontWeight: slotFilter === n ? 'bold' : 'normal',
+                    }}
+                  >
+                    Slot {n}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {registrationsLoading ? (
               <p style={{ textAlign: 'center', padding: '20px' }}>Loading...</p>
             ) : (
@@ -744,25 +910,34 @@ const EventList = () => {
                   .filter((r) =>
                     registrationFilter === 'pending' ? r.status === 'valid' : r.status === 'used'
                   )
+                  .filter((r) => slotFilter === 'all' || r.slot === slotFilter)
                   .map((r) => (
                     <div key={r._id} style={styles.regRow}>
                       <div>
                         <p style={styles.regName}>{r.student?.name || 'Unknown'}</p>
                         <p style={styles.regSub}>{r.student?.email} • {r.student?.branch}</p>
                       </div>
-                      <span
-                        style={r.status === 'used' ? styles.badgeCheckedIn : styles.badgePending}
-                      >
-                        {r.status === 'used' ? 'Checked In' : '🕐 Pending'}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {viewingEvent.slotCount > 0 && (
+                          <span style={styles.slotBadge}>Slot {r.slot || '—'}</span>
+                        )}
+                        <span
+                          style={r.status === 'used' ? styles.badgeCheckedIn : styles.badgePending}
+                        >
+                          {r.status === 'used' ? 'Checked In' : '🕐 Pending'}
+                        </span>
+                      </div>
                     </div>
                   ))}
 
-                {registrations.filter((r) =>
-                  registrationFilter === 'pending' ? r.status === 'valid' : r.status === 'used'
-                ).length === 0 && (
+                {registrations
+                  .filter((r) =>
+                    registrationFilter === 'pending' ? r.status === 'valid' : r.status === 'used'
+                  )
+                  .filter((r) => slotFilter === 'all' || r.slot === slotFilter).length === 0 && (
                   <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
-                    No {registrationFilter === 'pending' ? 'pending' : 'checked-in'} students.
+                    No {registrationFilter === 'pending' ? 'pending' : 'checked-in'} students
+                    {slotFilter === 'all' ? '' : ` in Slot ${slotFilter}`}.
                   </p>
                 )}
               </div>
@@ -920,6 +1095,73 @@ const styles = {
     display: 'flex',
     gap: '4px',
     flexWrap: 'wrap',
+  },
+  slotFilterRow: {
+    display: 'flex',
+    gap: '6px',
+    flexWrap: 'wrap',
+    marginBottom: '15px',
+  },
+  slotBadge: {
+    backgroundColor: '#ede7f6',
+    color: '#4527a0',
+    padding: '3px 9px',
+    borderRadius: '10px',
+    fontSize: '11px',
+    fontWeight: 'bold',
+    whiteSpace: 'nowrap',
+  },
+  slotsCell: {
+    minWidth: '160px',
+  },
+  slotList: {
+    marginTop: '8px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  slotRow: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px',
+    paddingBottom: '4px',
+    borderBottom: '1px solid #eee',
+  },
+  slotLabel: {
+    fontSize: '11px',
+    color: '#555',
+    fontWeight: 'bold',
+  },
+  slotHint: {
+    fontSize: '11px',
+    color: '#999',
+    margin: '4px 0 0',
+  },
+  slotEditorBox: {
+    background: '#f8faff',
+    border: '1px solid #e0e4ff',
+    borderRadius: '8px',
+    padding: '10px 12px',
+    marginBottom: '14px',
+  },
+  slotEditorRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginTop: '8px',
+  },
+  slotEditorLabel: {
+    fontSize: '12px',
+    fontWeight: 'bold',
+    color: '#3f51b5',
+    minWidth: '48px',
+  },
+  slotEditorInput: {
+    flex: 1,
+    padding: '6px 8px',
+    borderRadius: '5px',
+    border: '1px solid #ddd',
+    fontSize: '12px',
   },
   toggleBtnSmall: {
     padding: '5px 10px',

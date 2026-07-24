@@ -16,6 +16,7 @@ import {
 
 // Column configuration
 const STUDENT_COLUMNS = [
+  { key: 'profileImage', label: 'Photo', sortable: false, editable: false, width: '60px' },
   { key: 'name', label: 'Name', sortable: true, editable: true, width: '150px' },
   { key: 'email', label: 'Email', sortable: true, editable: true, width: '200px' },
   { key: 'password', label: 'Password', sortable: false, editable: false, width: '180px' },
@@ -53,6 +54,7 @@ const StudentList = () => {
   const [editValue, setEditValue] = useState('');
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [photoModalUrl, setPhotoModalUrl] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -468,6 +470,42 @@ const StudentList = () => {
         </div>
       );
     }
+
+    // Special handling for profile photo column — click to view full-size
+    if (column.key === 'profileImage') {
+      return value ? (
+        <img
+          src={value}
+          alt={student.name}
+          onClick={() => setPhotoModalUrl(value)}
+          title="Click to view full size"
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '1px solid #E5E7EB',
+            display: 'block',
+            cursor: 'pointer'
+          }}
+        />
+      ) : (
+        <div style={{
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          backgroundColor: '#F3F4F6',
+          border: '1px solid #E5E7EB',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '10px',
+          color: '#9CA3AF'
+        }}>
+          N/A
+        </div>
+      );
+    }
     
     if (isEditing) {
       return (
@@ -873,6 +911,47 @@ const StudentList = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* PHOTO LIGHTBOX MODAL */}
+        {photoModalUrl && (
+          <div style={styles.modalOverlay} onClick={() => setPhotoModalUrl(null)}>
+            <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setPhotoModalUrl(null)}
+                style={{
+                  position: 'absolute',
+                  top: '-44px',
+                  right: '0',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: 'none',
+                  color: 'white',
+                  fontSize: '22px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Close"
+              >
+                ✕
+              </button>
+              <img
+                src={photoModalUrl}
+                alt="Student full size"
+                style={{
+                  maxWidth: '80vw',
+                  maxHeight: '80vh',
+                  borderRadius: '12px',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+                  display: 'block'
+                }}
+              />
             </div>
           </div>
         )}
