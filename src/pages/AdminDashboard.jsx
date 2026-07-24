@@ -48,6 +48,7 @@ const AdminDashboard = () => {
   const [teamCategory, setTeamCategory] = useState('faculty');
   const [teamForm, setTeamForm] = useState({ name: '', branch: '', designation: '' });
   const [teamImageFile, setTeamImageFile] = useState(null);
+  const [sortNamesByCategory, setSortNamesByCategory] = useState({ faculty: false, osc: false, core: false, mentor: false });
   const [teamImagePreview, setTeamImagePreview] = useState('');
   const [teamFormLoading, setTeamFormLoading] = useState(false);
   const [teamFormError, setTeamFormError] = useState('');
@@ -253,6 +254,9 @@ const AdminDashboard = () => {
   const secondaryFieldLabel = teamCategory === 'faculty' ? 'Designation' : 'Branch';
   const showSecondaryField = teamCategory !== 'mentor';
   const currentCategoryMembers = teamMembers[teamCategory] || [];
+  const displayedTeamMembers = sortNamesByCategory[teamCategory]
+    ? [...currentCategoryMembers].sort((a, b) => a.name.localeCompare(b.name))
+    : currentCategoryMembers;
 
   return (
     <>
@@ -638,23 +642,33 @@ const AdminDashboard = () => {
                   No {TEAM_CATEGORIES.find((c) => c.key === teamCategory)?.label} members added yet.
                 </div>
               ) : (
-                <div style={styles.teamGrid}>
-                  {currentCategoryMembers.map((member) => (
-                    <div key={member.id || member._id} style={styles.teamCard}>
-                      <img src={member.imageUrl} alt={member.name} style={styles.teamThumb} />
-                      <div style={styles.teamCardName}>{member.name}</div>
-                      <div style={styles.teamCardSub}>
-                        {teamCategory === 'faculty' ? member.designation : member.branch}
+                <>
+                  <button
+                    onClick={() =>
+                      setSortNamesByCategory((prev) => ({ ...prev, [teamCategory]: !prev[teamCategory] }))
+                    }
+                    style={sortNamesByCategory[teamCategory] ? styles.sortBtnActive : styles.sortBtn}
+                  >
+                    {sortNamesByCategory[teamCategory] ? '✓ Sorted A–Z' : 'Sort Names A–Z'}
+                  </button>
+                  <div style={styles.teamGrid}>
+                    {displayedTeamMembers.map((member) => (
+                      <div key={member.id || member._id} style={styles.teamCard}>
+                        <img src={member.imageUrl} alt={member.name} style={styles.teamThumb} />
+                        <div style={styles.teamCardName}>{member.name}</div>
+                        <div style={styles.teamCardSub}>
+                          {teamCategory === 'faculty' ? member.designation : member.branch}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteTeamMember(member.id || member._id)}
+                          style={styles.deleteBtn}
+                        >
+                          Delete
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleDeleteTeamMember(member.id || member._id)}
-                        style={styles.deleteBtn}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </>
@@ -1061,6 +1075,28 @@ const styles = {
     cursor: 'pointer',
     fontSize: '12px',
     fontWeight: '500'
+  },
+  sortBtn: {
+    padding: '6px 14px',
+    backgroundColor: 'white',
+    color: '#3f51b5',
+    border: '1px solid #3f51b5',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '600',
+    marginBottom: '12px'
+  },
+  sortBtnActive: {
+    padding: '6px 14px',
+    backgroundColor: '#3f51b5',
+    color: 'white',
+    border: '1px solid #3f51b5',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '600',
+    marginBottom: '12px'
   },
   loadingSmall: {
     textAlign: 'center',
